@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentChallenge.Tests", "test\PaymentChallenge.Tests\PaymentChallenge.Tests.csproj", "{0206F42A-9942-41C9-8D83-BA9970785081}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentChallenge.Domain", "src\PaymentChallenge.Domain\PaymentChallenge.Domain.csproj", "{7313CB9D-F137-4123-8458-04D5CD5D52B6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,17 @@ Global
 		{0206F42A-9942-41C9-8D83-BA9970785081}.Release|x64.Build.0 = Release|Any CPU
 		{0206F42A-9942-41C9-8D83-BA9970785081}.Release|x86.ActiveCfg = Release|Any CPU
 		{0206F42A-9942-41C9-8D83-BA9970785081}.Release|x86.Build.0 = Release|Any CPU
+		{7313CB9D-F137-4123-8458-04D5CD5D52B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7313CB9D-F137-4123-8458-04D5CD5D52B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7313CB9D-F137-4123-8458-04D5CD5D52B6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7313CB9D-F137-4123-8458-04D5CD5D52B6}.Debug|x64.Build.0 = Debug|Any CPU
+		{7313CB9D-F137-4123-8458-04D5CD5D52B6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7313CB9D-F137-4123-8458-04D5CD5D52B6}.Debug|x86.Build.0 = Debug|Any CPU
+		{7313CB9D-F137-4123-8458-04D5CD5D52B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7313CB9D-F137-4123-8458-04D5CD5D52B6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7313CB9D-F137-4123-8458-04D5CD5D52B6}.Release|x64.ActiveCfg = Release|Any CPU
+		{7313CB9D-F137-4123-8458-04D5CD5D52B6}.Release|x64.Build.0 = Release|Any CPU
+		{7313CB9D-F137-4123-8458-04D5CD5D52B6}.Release|x86.ActiveCfg = Release|Any CPU
+		{7313CB9D-F137-4123-8458-04D5CD5D52B6}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
