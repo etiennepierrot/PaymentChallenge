@@ -8,8 +8,7 @@ namespace PaymentChallenge.Domain.Cards
             Cvv = cvv;
             ExpirationDate = expirationDate;
         }
-        //TODO add strong typing this field
-        public string CardNumber { get; }
+        public CardNumber CardNumber { get; }
         public string Cvv { get; }
         public string ExpirationDate { get; }
     }

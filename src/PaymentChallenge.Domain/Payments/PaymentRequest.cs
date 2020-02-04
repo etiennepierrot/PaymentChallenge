@@ -1,10 +1,11 @@
+using FluentValidation;
 using PaymentChallenge.Domain.Cards;
 using PaymentChallenge.Domain.Merchants;
 using PaymentChallenge.Domain.Values;
 
 namespace PaymentChallenge.Domain.Payments
 {
-    public struct PaymentRequest
+    public class PaymentRequest
     {
         public PaymentRequest(Card card, MerchantId merchantId, Money amountToCharge, string paymentReference = "")
         {
@@ -18,5 +19,16 @@ namespace PaymentChallenge.Domain.Payments
         public MerchantId  MerchantId { get; }
         public Money AmountToCharge { get; }
         public MerchantReference MerchantReference { get; }
+
+
+    }
+
+    public class PaymentRequestValidator : AbstractValidator<PaymentRequest>
+    {
+        public PaymentRequestValidator()
+        {
+            RuleFor(c => c.Card).SetValidator(new CardValidator());
+            RuleFor(c => c.AmountToCharge).Must(x => x > new Money(0, x.Currency));
+        }
     }
 }

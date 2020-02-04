@@ -1,3 +1,5 @@
+using System;
+
 namespace PaymentChallenge.Domain.Values
 {
     public struct Money
@@ -10,5 +12,25 @@ namespace PaymentChallenge.Domain.Values
             Amount = amount;
             Currency = currency;
         }
+
+        public static bool operator < (Money left, Money right)
+        {
+            AssertSameCurrency(left, right);
+            return left.Amount < right.Amount;
+        }
+
+        public static bool operator > (Money left, Money right)
+        {
+            AssertSameCurrency(left, right);
+            return left.Amount > right.Amount;
+        }
+
+        public static void AssertSameCurrency(Money first, Money second)
+        {
+            if (first.Currency != second.Currency)
+                throw new ArgumentException("Money Currency Not Equal");
+        }
+
+       
     }
 }

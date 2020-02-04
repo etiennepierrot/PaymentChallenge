@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using FluentValidation.Results;
 using PaymentChallenge.Domain.AcquiringBank;
 
 namespace PaymentChallenge.Domain.Payments
@@ -8,29 +9,40 @@ namespace PaymentChallenge.Domain.Payments
         private readonly PaymentRepository _paymentRepository;
         private readonly IdGenerator _idGenerator;
         private readonly AcquiringBankGateway _bankGateway;
+        private PaymentRequestValidator _paymentRequestValidator;
 
         public PaymentGateway(PaymentRepository paymentRepository, IdGenerator idGenerator, AcquiringBankGateway bankGateway)
         {
             _paymentRepository = paymentRepository;
             _idGenerator = idGenerator;
             _bankGateway = bankGateway;
+            _paymentRequestValidator = new PaymentRequestValidator();
         }
 
-        public async Task<PaymentResponse> ProcessAsync(PaymentRequest command)
+        public async Task<Either<PaymentResponse, ValidationResult>> ProcessAsync(PaymentRequest command)
         {
-            var bankResponse = await _bankGateway.AuthorizePaymentAsync(new BankPaymentDto
+            ValidationResult validationResult = _paymentRequestValidator.Validate(command);
+            if (validationResult.IsValid)
             {
-                Amount = command.AmountToCharge.Amount,
-                Currency = command.AmountToCharge.Currency.ToString(),
-                CardNumber = command.Card.CardNumber,
-                Cvv = command.Card.Cvv,
-                ExpirationDate = command.Card.ExpirationDate
-            });
-            var paymentId = _idGenerator.GeneratePaymentId();
+                var bankResponse = await _bankGateway.AuthorizePaymentAsync(new BankPaymentDto
+                {
+                    Amount = command.AmountToCharge.Amount,
+                    Currency = command.AmountToCharge.Currency.ToString(),
+                    CardNumber = command.Card.CardNumber,
+                    Cvv = command.Card.Cvv,
+                    ExpirationDate = command.Card.ExpirationDate
+                });
+                var paymentId = _idGenerator.GeneratePaymentId();
 
-            Payment payment = new Payment(command.MerchantId, command.Card, command.AmountToCharge, paymentId, bankResponse.Status == "success" ? PaymentStatus.Success : PaymentStatus.Fail, command.MerchantReference );
-            await _paymentRepository.SaveAsync(payment);
-            return new PaymentResponse(payment.Status, paymentId);
+                PaymentStatus paymentStatus = bankResponse.Status == "success" ? PaymentStatus.Success : PaymentStatus.Fail;
+                Payment payment = new Payment(command.MerchantId, command.Card, command.AmountToCharge, paymentId, paymentStatus, command.MerchantReference );
+                await _paymentRepository.SaveAsync(payment);
+                return new Either<PaymentResponse,  ValidationResult>(new PaymentResponse(payment.Status, paymentId));
+            }
+            else
+            {
+                return new Either<PaymentResponse, ValidationResult>(validationResult);
+            }
         }
 
         public async Task<Payment> RetrieveAsync(PaymentId paymentId)
