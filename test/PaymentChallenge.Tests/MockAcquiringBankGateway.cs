@@ -15,7 +15,10 @@ namespace PaymentChallenge.Tests
         public async Task<ResultDto> AuthorizePaymentAsync(BankPaymentDto bankPaymentDto)
         {
             ForwardedPayments.Add(bankPaymentDto);
-            return await Task.FromResult(new ResultDto("success", "myPaymentReference"));
+            return await Task.FromResult(bankPaymentDto.Amount == 4242 
+                ? new ResultDto("fail", "myPaymentReference") 
+                : new ResultDto("success", "myPaymentReference"));
+
         }
     }
 }

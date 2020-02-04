@@ -12,19 +12,34 @@ namespace PaymentChallenge.Domain.Payments
     /// </summary>
     public struct Payment
     {
-        public Payment(MerchantId merchantId, Card card, Money money, PaymentId paymentId, PaymentStatus success)
+        public Payment(MerchantId merchantId, Card card, Money money, PaymentId paymentId, PaymentStatus status, MerchantReference merchantReference)
         {
             MerchantId = merchantId;
             Card = card;
             Money = money;
             PaymentId = paymentId;
-            Success = success;
+            Status = status;
+            MerchantReference = merchantReference;
         }
 
         public MerchantId MerchantId { get;  }
         public Card Card { get; }
         public Money Money { get; }
         public PaymentId PaymentId { get; }
-        public PaymentStatus Success { get; }
+        public PaymentStatus Status { get; }
+        public string MerchantReference { get; }
+    }
+
+    public struct MerchantReference
+    {
+        private readonly string _merchantReference;
+
+        public MerchantReference(string merchantReference)
+        {
+            _merchantReference = merchantReference;
+        }
+        
+        public static implicit operator string(MerchantReference merchantReference) => merchantReference._merchantReference;
+        public static implicit operator MerchantReference(string str) => new MerchantReference(str);
     }
 }

@@ -18,6 +18,7 @@ namespace PaymentChallenge.Tests
         private readonly MockAcquiringBankGateway _acquiringBankGateway = new MockAcquiringBankGateway();
         
         private readonly Card _card = new Card("4242424242424242", "100", "1224" );
+        private readonly Money _amountPaymentFailedInsufficientFund = new Money(4242, Currency.EUR);
 
         public PaymentGatewayTests()
         {
@@ -55,7 +56,24 @@ namespace PaymentChallenge.Tests
         
         /// <summary>
         /// As a Merchant (FancyShop)
-        /// Given an order of a shopper to pay by card
+        /// Given an order of a shopper to pay by card with insufficient fund
+        /// When the Merchant request a payment processing
+        /// Then the Merchant should get a payment identifier and a payment status failed
+        /// </summary>
+        [Fact]
+        public async Task Return_PaymentStatus_Failed()
+        {
+            _idGenerator.NextPaymentId("PAY-Return_PaymentStatusFailed");
+            
+            PaymentResponse paymentResponse = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchant.Id, _amountPaymentFailedInsufficientFund) );
+            
+            paymentResponse.Should()
+                .BeEquivalentTo(new PaymentResponse(PaymentStatus.Fail, "PAY-Return_PaymentStatusFailed"));
+        }
+        
+        /// <summary>
+        /// As a Merchant (FancyShop)
+        /// Given an order of a shopper to pay by card with an
         /// When the Merchant request a payment processing
         /// Then the Merchant should get a payment identifier and a payment status
         /// </summary>
@@ -75,30 +93,36 @@ namespace PaymentChallenge.Tests
         /// As a Merchant (FancyShop)
         /// Given a payment that the merchant has requested 
         /// When the Merchant ask to retrieve this payment 
-        /// Then the Merchant should get detailed payment information
+        /// Then the Merchant should get detailed payment information with Merchant Reference for reconciliation
         /// </summary>
         [Fact]
         public async Task Retrieve_PaymentInfo()
         {
             _idGenerator.NextPaymentId("PAY-Retrieve_PaymentInfo");
             Money amount = new Money(1000, Currency.EUR);
-            PaymentResponse paymentResponse = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchant.Id, amount) );
+            PaymentResponse paymentResponse = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchant.Id, amount, "ORDER-123") );
 
             Payment payment = await _paymentGateway.RetrieveAsync(paymentResponse.PaymentId);
             
             payment.Should()
-                .BeEquivalentTo(new Payment(_merchant.Id, _card, new Money(1000, Currency.EUR), "PAY-Retrieve_PaymentInfo", PaymentStatus.Success));
+                .BeEquivalentTo(new Payment(_merchant.Id, _card, 
+                    new Money(1000, Currency.EUR), 
+                    "PAY-Retrieve_PaymentInfo", PaymentStatus.Success, 
+                    "ORDER-123"));
         }
         
+        
+        
         //TODO scenario
-        //  payment failed
         //  timeoutexception gateway, retry, and idempotency
         //  Error payment (bad cardnumber, no fund)
         //  Format validation
         //  List payment merchant
         //  PaymentId not found
-        //  add external reference payment for reconciliation merchant
         //  Persist in filesystem
+        //  cardnumber masked
+
+        //  Encrypt Cardnumber ?
         //  and so on ...
     }
 }

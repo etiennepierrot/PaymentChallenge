@@ -28,9 +28,9 @@ namespace PaymentChallenge.Domain.Payments
             });
             var paymentId = _idGenerator.GeneratePaymentId();
 
-            Payment payment = new Payment(command.MerchantId, command.Card, command.AmountToCharge, paymentId, PaymentStatus.Success );
+            Payment payment = new Payment(command.MerchantId, command.Card, command.AmountToCharge, paymentId, bankResponse.Status == "success" ? PaymentStatus.Success : PaymentStatus.Fail, command.MerchantReference );
             await _paymentRepository.SaveAsync(payment);
-            return new PaymentResponse(PaymentStatus.Success, paymentId);
+            return new PaymentResponse(payment.Status, paymentId);
         }
 
         public async Task<Payment> RetrieveAsync(PaymentId paymentId)
