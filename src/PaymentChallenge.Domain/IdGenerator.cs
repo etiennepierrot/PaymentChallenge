@@ -1,9 +1,9 @@
-using PaymentChallenge.Domain.Shoppers;
+using PaymentChallenge.Domain.Payments;
 
 namespace PaymentChallenge.Domain
 {
     public interface IdGenerator
     {
-        ShopperId GenerateShopperId();
+        PaymentId GeneratePaymentId();
     }
 }

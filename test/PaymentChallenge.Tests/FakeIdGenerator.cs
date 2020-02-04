@@ -1,13 +1,23 @@
 using PaymentChallenge.Domain;
-using PaymentChallenge.Domain.Shoppers;
+using PaymentChallenge.Domain.Payments;
 
 namespace PaymentChallenge.Tests
 {
     public class FakeIdGenerator : IdGenerator
     {
-        public ShopperId GenerateShopperId()
+        private PaymentId _nextPaymentId;
+
+        public FakeIdGenerator()
         {
-            return new ShopperId("FakeShopperId");
+            _nextPaymentId = "PAY-uniqueId";
+        }
+        public void NextPaymentId(PaymentId paymentId)
+        {
+            _nextPaymentId = paymentId;
+        }
+        public PaymentId GeneratePaymentId()
+        {
+            return _nextPaymentId;
         }
     }
 }

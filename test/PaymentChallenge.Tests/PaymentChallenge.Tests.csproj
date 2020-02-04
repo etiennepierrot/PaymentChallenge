@@ -13,4 +13,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\src\PaymentChallenge.Domain\PaymentChallenge.Domain.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <DotNetCliToolReference Include="Microsoft.DotNet.Watcher.Tools" Version="1.0.0" />
+    </ItemGroup>
 </Project>
