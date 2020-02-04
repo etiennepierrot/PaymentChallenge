@@ -89,5 +89,16 @@ namespace PaymentChallenge.Tests
             payment.Should()
                 .BeEquivalentTo(new Payment(_merchant.Id, _card, new Money(1000, Currency.EUR), "PAY-Retrieve_PaymentInfo", PaymentStatus.Success));
         }
+        
+        //TODO scenario
+        //  payment failed
+        //  timeoutexception gateway, retry, and idempotency
+        //  Error payment (bad cardnumber, no fund)
+        //  Format validation
+        //  List payment merchant
+        //  PaymentId not found
+        //  add external reference payment for reconciliation merchant
+        //  Persist in filesystem
+        //  and so on ...
     }
 }
