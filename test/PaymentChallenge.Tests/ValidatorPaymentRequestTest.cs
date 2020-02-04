@@ -27,6 +27,7 @@ namespace PaymentChallenge.Tests
             TestValidationResult<PaymentRequest, PaymentRequest> validationResult = _validator.TestValidate(new PaymentRequest(_invalidCard, _merchant.Id, amount, "ORDER-123"));
             validationResult.ShouldHaveValidationErrorFor(pr => pr.Card.CardNumber);
             validationResult.ShouldHaveValidationErrorFor(pr => pr.Card.Cvv);
+            validationResult.ShouldHaveValidationErrorFor(pr => pr.Card.ExpirationDate);
         }
 
         [Fact]
