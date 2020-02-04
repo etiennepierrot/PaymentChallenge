@@ -1,3 +1,5 @@
+using PaymentChallenge.Domain.Payments;
+
 namespace PaymentChallenge.Domain.AcquiringBank
 {
     public struct BankPaymentDto
@@ -7,5 +9,6 @@ namespace PaymentChallenge.Domain.AcquiringBank
         public string ExpirationDate { get; set; }
         public int Amount { get; set; }
         public string Currency { get; set; }
+        public string Reference { get; set; }
     }
 }

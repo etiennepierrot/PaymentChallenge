@@ -17,8 +17,9 @@ namespace PaymentChallenge.Tests
         private readonly PaymentGateway _paymentGateway;
         private readonly MockAcquiringBankGateway _acquiringBankGateway = new MockAcquiringBankGateway();
         
-        private readonly Card _card = new Card("4242424242424242", "100", "1224" );
+        private readonly Card _card = new Card("4242424242424242", "100", "1212" );
         private readonly Money _amountPaymentFailedInsufficientFund = new Money(4242, Currency.EUR);
+        private int _amountTimeout = 666;
 
         public PaymentGatewayTests()
         {
@@ -50,9 +51,25 @@ namespace PaymentChallenge.Tests
                         Currency = "EUR",
                         CardNumber = "4242424242424242",
                         Cvv = "100",
-                        ExpirationDate = "1224"
+                        ExpirationDate = "1212"
                     }
                 });    
+
+        }
+
+        /// <summary>
+        /// As a Merchant (FancyShop)
+        /// Given a network issue (timeout)
+        /// When the Merchant request a payment processing
+        /// Then the status should be nicely reconciliate
+        /// </summary>
+        [Fact]
+        public async Task Reconciliate_After_Timeout_Acquirer()
+        {
+            var amountToCharge = new Money(_amountTimeout, Currency.EUR);
+            var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchant.Id, amountToCharge));
+
+            payment.LeftOrDefault().PaymentStatus.Should().Be(PaymentStatus.Fail);
 
         }
         
@@ -113,7 +130,7 @@ namespace PaymentChallenge.Tests
         }
 
 
-        //TODO scenario
+        //  TODO scenario
         //  timeoutexception gateway, retry, and idempotency
         //  Error payment (bad cardnumber, no fund)
         //  Format validation 
@@ -121,7 +138,7 @@ namespace PaymentChallenge.Tests
         //  PaymentId not found
         //  Persist in filesystem
         //  cardnumber masked
-
+        //  logging
         //  Encrypt Cardnumber ?
         //  and so on ...
     }

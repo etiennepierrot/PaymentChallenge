@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using FluentValidation;
 using PaymentChallenge.Domain.Cards;
 using PaymentChallenge.Domain.Merchants;
@@ -7,6 +8,8 @@ namespace PaymentChallenge.Domain.Payments
 {
     public class PaymentRequest
     {
+
+
         public PaymentRequest(Card card, MerchantId merchantId, Money amountToCharge, string paymentReference = "")
         {
             Card = card;
@@ -25,6 +28,8 @@ namespace PaymentChallenge.Domain.Payments
 
     public class PaymentRequestValidator : AbstractValidator<PaymentRequest>
     {
+
+
         public PaymentRequestValidator()
         {
             RuleFor(c => c.Card).SetValidator(new CardValidator());
