@@ -13,23 +13,35 @@ namespace PaymentChallenge.Domain.Payments
     /// </summary>
     public class Payment
     {
-        public Payment(PaymentRequest paymentRequest, PaymentId paymentId, AcquirerBankResponse bankResponse)
+        public static Payment CreateFromPaymentRequest(PaymentRequest paymentRequest, PaymentId paymentId, AcquirerBankResponse bankResponse)
         {
-            MerchantId = paymentRequest.MerchantId;
-            Card = paymentRequest.Card;
-            Amount = paymentRequest.AmountToCharge;
-            MerchantReference = paymentRequest.MerchantReference;
-            PaymentId = paymentId;
-            Status = bankResponse.Status;
-            BankReference = bankResponse.BankReference;
+            return new Payment()
+            {
+                MerchantId = paymentRequest.MerchantId,
+                Card = paymentRequest.Card,
+                Amount = paymentRequest.AmountToCharge,
+                MerchantReference = paymentRequest.MerchantReference,
+                PaymentId = paymentId,
+                Status = bankResponse.Status,
+                BankReference = bankResponse.BankReference,
+            };
         }
 
-        public MerchantId MerchantId { get;  }
-        public Card Card { get; }
-        public Money Amount { get; }
-        public PaymentId PaymentId { get; }
-        public PaymentStatus Status { get; }
-        public string MerchantReference { get; }
-        public AcquirerBankReference BankReference { get; }
+        /// <summary>
+        /// I could use the proxy pattern to only authorize the usage of this ctor for the repository but it's seem
+        /// overenginnering
+        /// </summary>
+        public Payment()
+        {
+            
+        }
+
+        public MerchantId MerchantId { get; private set; }
+        public Card Card { get;  private set;  }
+        public Money Amount { get;  private set; }
+        public PaymentId PaymentId { get;  private set; }
+        public PaymentStatus Status { get;  private set; }
+        public string MerchantReference { get;  private set; }
+        public AcquirerBankReference BankReference { get; private set; }
     }
 }

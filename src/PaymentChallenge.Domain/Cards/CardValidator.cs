@@ -12,7 +12,7 @@ namespace PaymentChallenge.Domain.Cards
         public CardValidator()
         {
 
-            RuleFor(c =>(string) c.CardNumber).SetValidator(new CreditCardValidator())
+            RuleFor(c => c.CardNumber.UnMasked).SetValidator(new CreditCardValidator())
                 .WithMessage("Format Cardnumber incorrect");
             RuleFor(c => c.Cvv).NotNull().Length(3).WithMessage("Format CVV incorrect");
             RuleFor(c => c.ExpirationDate).Must( x => _regexExpirationDate.Match(x).Success)

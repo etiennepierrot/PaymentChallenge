@@ -28,7 +28,7 @@ namespace PaymentChallenge.Tests
             
             var validationResult = _validator.TestValidate(paymentRequest);
             
-            validationResult.ShouldHaveValidationErrorFor(pr => pr.Card.CardNumber);
+            validationResult.ShouldHaveValidationErrorFor(pr => pr.Card.CardNumber.UnMasked);
             validationResult.ShouldHaveValidationErrorFor(pr => pr.Card.Cvv);
             validationResult.ShouldHaveValidationErrorFor(pr => pr.Card.ExpirationDate);
         }
