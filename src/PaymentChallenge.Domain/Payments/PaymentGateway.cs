@@ -28,10 +28,11 @@ namespace PaymentChallenge.Domain.Payments
 
             var bankResponse = await _acquirerBankAdapter.BankResponse(command, paymentId);
 
-            Payment payment = new Payment(command.MerchantId, command.Card, command.AmountToCharge, paymentId, bankResponse.Status, command.MerchantReference);
+            Payment payment = new Payment(command, paymentId, bankResponse);
             await _paymentRepository.SaveAsync(payment);
             return new Either<PaymentResponse, ValidationResult>(new PaymentResponse(payment.Status, paymentId));
 
         }
+
     }
 }

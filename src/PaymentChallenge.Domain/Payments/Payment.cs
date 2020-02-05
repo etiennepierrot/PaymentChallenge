@@ -1,3 +1,4 @@
+using PaymentChallenge.Domain.AcquiringBank;
 using PaymentChallenge.Domain.Cards;
 using PaymentChallenge.Domain.Merchants;
 using PaymentChallenge.Domain.Values;
@@ -10,36 +11,25 @@ namespace PaymentChallenge.Domain.Payments
     /// But for the moment any use case require a mutation
     /// so i decide to stay immutable because I like immutability
     /// </summary>
-    public struct Payment
+    public class Payment
     {
-        public Payment(MerchantId merchantId, Card card, Money money, PaymentId paymentId, PaymentStatus status, MerchantReference merchantReference)
+        public Payment(PaymentRequest paymentRequest, PaymentId paymentId, AcquirerBankResponse bankResponse)
         {
-            MerchantId = merchantId;
-            Card = card;
-            Money = money;
+            MerchantId = paymentRequest.MerchantId;
+            Card = paymentRequest.Card;
+            Amount = paymentRequest.AmountToCharge;
+            MerchantReference = paymentRequest.MerchantReference;
             PaymentId = paymentId;
-            Status = status;
-            MerchantReference = merchantReference;
+            Status = bankResponse.Status;
+            BankReference = bankResponse.BankReference;
         }
 
         public MerchantId MerchantId { get;  }
         public Card Card { get; }
-        public Money Money { get; }
+        public Money Amount { get; }
         public PaymentId PaymentId { get; }
         public PaymentStatus Status { get; }
         public string MerchantReference { get; }
-    }
-
-    public struct MerchantReference
-    {
-        private readonly string _merchantReference;
-
-        public MerchantReference(string merchantReference)
-        {
-            _merchantReference = merchantReference;
-        }
-        
-        public static implicit operator string(MerchantReference merchantReference) => merchantReference._merchantReference;
-        public static implicit operator MerchantReference(string str) => new MerchantReference(str);
+        public AcquirerBankReference BankReference { get; }
     }
 }

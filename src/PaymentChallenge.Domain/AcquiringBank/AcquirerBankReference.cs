@@ -10,5 +10,10 @@ namespace PaymentChallenge.Domain.AcquiringBank
         }
 
         public static implicit operator AcquirerBankReference (string str) => new AcquirerBankReference(str);
+
+        public override string ToString()
+        {
+            return _reference;
+        }
     }
 }
