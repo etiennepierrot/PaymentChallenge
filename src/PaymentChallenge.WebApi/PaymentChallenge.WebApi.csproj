@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp3.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\PaymentChallenge.AcquirerBank\PaymentChallenge.AcquirerBank.csproj" />
+      <ProjectReference Include="..\PaymentChallenge.Domain\PaymentChallenge.Domain.csproj" />
+      <ProjectReference Include="..\PaymentChallenge.Persistence\PaymentChallenge.Persistence.csproj" />
+    </ItemGroup>
+
+</Project>

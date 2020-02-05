@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using PaymentChallenge.Domain.AcquiringBank;
 using PaymentChallenge.Domain.Payments;
 
-namespace PaymentChallenge.Tests
+namespace PaymentChallenge.AcquirerBank
 {
 
     public class MockAcquiringBankGateway : AcquiringBankGateway

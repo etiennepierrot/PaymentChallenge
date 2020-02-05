@@ -1,12 +1,15 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using FluentAssertions;
+using PaymentChallenge.AcquirerBank;
 using PaymentChallenge.Domain.AcquiringBank;
 using PaymentChallenge.Domain.Cards;
 using PaymentChallenge.Domain.Merchants;
 using PaymentChallenge.Domain.Payments;
 using PaymentChallenge.Domain.Values;
+using PaymentChallenge.Persistence;
 
 namespace PaymentChallenge.Tests
 {
@@ -15,6 +18,7 @@ namespace PaymentChallenge.Tests
         private readonly Merchant _merchant;
         private readonly FakeIdGenerator _idGenerator;
         private readonly PaymentGateway _paymentGateway;
+        private readonly PaymentRepository _paymentRepository;
         private readonly MockAcquiringBankGateway _acquiringBankGateway = new MockAcquiringBankGateway();
         
         private readonly Card _card = new Card("4242424242424242", "100", "1212" );
@@ -25,7 +29,8 @@ namespace PaymentChallenge.Tests
         {
             _merchant = new Merchant("FancyShop");
             _idGenerator = new FakeIdGenerator();
-            _paymentGateway = new PaymentGateway(new InMemoryPaymentRepository(), _idGenerator, _acquiringBankGateway);
+            _paymentRepository = new InMemoryPaymentRepository();
+            _paymentGateway = new PaymentGateway(_paymentRepository, _idGenerator, _acquiringBankGateway);
         }
 
         
@@ -120,13 +125,31 @@ namespace PaymentChallenge.Tests
             Money amount = new Money(1000, Currency.EUR);
             var paymentResponse = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchant.Id, amount, "ORDER-123") );
 
-            Payment payment = await _paymentGateway.RetrieveAsync(paymentResponse.LeftOrDefault().PaymentId);
+            Payment payment = await _paymentRepository.GetAsync(paymentResponse.LeftOrDefault().PaymentId);
 
             payment.Should()
                 .BeEquivalentTo(new Payment(_merchant.Id, _card,
                     new Money(1000, Currency.EUR),
                     "PAY-Retrieve_PaymentInfo", PaymentStatus.Success,
                     "ORDER-123"));
+        }
+        
+        [Fact]
+        public async Task Retrieve_List_Payments()
+        {
+            var payments =  Enumerable.Range(1, 5).ToList().Select(async i =>  await MakePayment(i.ToString()));
+
+            List<Payment> paymentsRetrieved = await _paymentRepository.GetPaymentsAsync(_merchant.Id);
+
+            paymentsRetrieved.Count.Should().Equals(3);
+        }
+
+        private async Task MakePayment(string orderId)
+        {
+            _idGenerator.NextPaymentId($"PAY-{orderId}");
+            Money amount = new Money(1000, Currency.EUR);
+            var paymentRequest = new PaymentRequest(_card, _merchant.Id, amount, orderId);
+            await _paymentGateway.ProcessAsync(paymentRequest);
         }
 
 

@@ -1,8 +1,10 @@
 using System;
 using System.Net;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentValidation.Results;
 using PaymentChallenge.Domain.AcquiringBank;
+using PaymentChallenge.Domain.Merchants;
 
 namespace PaymentChallenge.Domain.Payments
 {
@@ -11,7 +13,7 @@ namespace PaymentChallenge.Domain.Payments
         private readonly PaymentRepository _paymentRepository;
         private readonly IdGenerator _idGenerator;
         private readonly AcquiringBankGateway _bankGateway;
-        private PaymentRequestValidator _paymentRequestValidator;
+        private readonly PaymentRequestValidator _paymentRequestValidator;
 
         public PaymentGateway(PaymentRepository paymentRepository, IdGenerator idGenerator, AcquiringBankGateway bankGateway)
         {
@@ -54,9 +56,6 @@ namespace PaymentChallenge.Domain.Payments
 
         }
 
-        public async Task<Payment> RetrieveAsync(PaymentId paymentId)
-        {
-            return await _paymentRepository.GetAsync(paymentId);
-        }
+       
     }
 }

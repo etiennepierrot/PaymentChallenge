@@ -25,8 +25,10 @@ namespace PaymentChallenge.Tests
         public void ValidationCardNumber()
         {
             Money amount = new Money(1000, Currency.EUR);
-
-            TestValidationResult<PaymentRequest, PaymentRequest> validationResult = _validator.TestValidate(new PaymentRequest(_invalidCard, _merchant.Id, amount, "ORDER-123"));
+            var paymentRequest = new PaymentRequest(_invalidCard, _merchantId, amount, "ORDER-123");
+            
+            var validationResult = _validator.TestValidate(paymentRequest);
+            
             validationResult.ShouldHaveValidationErrorFor(pr => pr.Card.CardNumber);
             validationResult.ShouldHaveValidationErrorFor(pr => pr.Card.Cvv);
             validationResult.ShouldHaveValidationErrorFor(pr => pr.Card.ExpirationDate);
@@ -37,7 +39,7 @@ namespace PaymentChallenge.Tests
         {
             Money amount = new Money(0, Currency.EUR);
 
-            _validator.TestValidate(new PaymentRequest(_invalidCard, _merchant.Id, amount, "ORDER-123"))
+            _validator.TestValidate(new PaymentRequest(_invalidCard, _merchantId, amount, "ORDER-123"))
                 .ShouldHaveValidationErrorFor(pr => pr.AmountToCharge);
         }
     }
