@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>PaymentChallenge.WebApi</name>
+    </assembly>
+    <members>
+        <member name="M:PaymentChallenge.WebApi.Controllers.PaymentsController.Post(PaymentChallenge.WebApi.Controllers.Dto.PaymentRequestDto)">
+             <summary>
+             Make a payment
+             </summary>
+             <param name="paymentRequestDto">paymentRequest</param>
+             <remarks>
+             Sample request:
+            
+                 POST /api/payments
+                     {
+                         "Card": {
+                             "CardNumber": "4242424242424242",
+                             "Cvv": "100",
+                             "ExpirationDate": "1212"
+                         },
+                         "MerchantId": "FancyShop",
+                         "AmountToCharge": {
+                             "Amount": 1000,
+                             "Currency": 0
+                         },
+                         "MerchantReference": "eazeazea4d5q4s"
+                     }
+             </remarks>
+             <returns></returns>
+        </member>
+    </members>
+</doc>

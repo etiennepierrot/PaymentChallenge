@@ -1,16 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using FluentValidation.Results;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using PaymentChallenge.Domain;
 using PaymentChallenge.Domain.Cards;
-using PaymentChallenge.Domain.Merchants;
 using PaymentChallenge.Domain.Payments;
 using PaymentChallenge.Domain.Values;
+using PaymentChallenge.WebApi.Controllers.Dto;
+using ValidationResult = FluentValidation.Results.ValidationResult;
 
 namespace PaymentChallenge.WebApi.Controllers
 {
@@ -29,24 +28,69 @@ namespace PaymentChallenge.WebApi.Controllers
             _paymentRepository = paymentRepository;
         }
 
+        /// <summary>
+        /// Make a payment
+        /// </summary>
+        /// <param name="paymentRequestDto">paymentRequest</param>
+        /// <remarks>
+        /// Sample request:
+        ///
+        ///     POST /api/payments
+        ///         {
+        ///             "Card": {
+        ///                 "CardNumber": "4242424242424242",
+        ///                 "Cvv": "100",
+        ///                 "ExpirationDate": "1212"
+        ///             },
+        ///             "MerchantId": "FancyShop",
+        ///             "AmountToCharge": {
+        ///                 "Amount": 1000,
+        ///                 "Currency": 0
+        ///             },
+        ///             "MerchantReference": "eazeazea4d5q4s"
+        ///         }
+        /// </remarks>
+        /// <returns></returns>
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] PaymentRequestDto paymentRequest)
+        [ProducesResponseType(201, Type = typeof(PaymentResponseDto))]
+        [ProducesResponseType(400, Type = typeof(ValidationErrorDto))]
+        public async Task<IActionResult> Post([FromBody][Required] PaymentRequestDto paymentRequestDto)
         {
-            var payment = await ToPaymentRequestModel(paymentRequest);
-            return payment.Match(response => Ok(new PaymentResponseDto
+
+            var command = CreateCommand(paymentRequestDto);
+            var payment = await _paymentGateway.ProcessAsync(command);
+
+            return payment.Match<IActionResult>(response => Created(@"/api/payments",new PaymentResponseDto
                 {
                     PaymentId = response.PaymentId,
                     PaymentStatus = response.PaymentStatus
                 }),
-                result => Problem(result.Errors.ToString()));
+                result => new JsonResult(Detail(result))
+                {
+                    StatusCode = 400
+                });
         }
 
-        private async Task<Either<PaymentResponse, ValidationResult>> ToPaymentRequestModel(PaymentRequestDto paymentRequest)
+        private static ValidationErrorDto Detail(ValidationResult result)
         {
-            var card = new Card(paymentRequest.Card.CardNumber, paymentRequest.Card.Cvv, paymentRequest.Card.ExpirationDate);
-            var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(card, paymentRequest.MerchantId,
-                new Money(paymentRequest.AmountToCharge.Amount, paymentRequest.AmountToCharge.Currency)));
-            return payment;
+            return new ValidationErrorDto()
+            {
+                Errors = result.Errors.Select(x => new Error
+                {
+                    Field = x.PropertyName,
+                    Message = x.ErrorMessage
+                }).ToList()
+            };
+        }
+
+        public class Error
+        {
+            public string Field { get; set; }
+            public string Message { get; set; }
+        }
+        public class ValidationErrorDto
+        {
+            public List<Error> Errors { get; set; }
         }
 
         [HttpGet]
@@ -55,33 +99,24 @@ namespace PaymentChallenge.WebApi.Controllers
             var payment = await _paymentRepository.GetAsync(paymentId);
             return Ok(payment);
         }
-        
-    }
 
-    public class PaymentResponseDto
-    {
-        public PaymentStatus PaymentStatus { get; set; }
-        public string PaymentId { get; set; }
-    }
+        private static PaymentRequest CreateCommand(PaymentRequestDto paymentRequest)
+        {
+            return new PaymentRequest(
+                DtoToModel(paymentRequest),
+                paymentRequest.MerchantId, 
+                DtoToModel(paymentRequest.AmountToCharge), 
+                paymentRequest.MerchantReference);
+        }
 
-    public class PaymentRequestDto
-    {
-        public CardDto Card { get; set; }
-        public string  MerchantId { get; set; }
-        public MoneyDto AmountToCharge { get; set; }
-        public string MerchantReference { get; set; }
-    }
+        private static Money DtoToModel(MoneyDto moneyDto)
+        {
+            return new Money(moneyDto.Amount, moneyDto.Currency);
+        }
 
-    public class MoneyDto
-    {
-        public int Amount { get; set; }
-        public Currency Currency { get; set; }
-    }
-
-    public class CardDto
-    {
-        public string CardNumber { get; set; }
-        public string Cvv { get; set; }
-        public string ExpirationDate { get; set; }
+        private static Card DtoToModel(PaymentRequestDto paymentRequest)
+        {
+            return new Card(paymentRequest.Card.CardNumber, paymentRequest.Card.Cvv, paymentRequest.Card.ExpirationDate);
+        }
     }
 }

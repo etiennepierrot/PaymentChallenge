@@ -4,6 +4,17 @@
         <TargetFramework>netcoreapp3.0</TargetFramework>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+      <DocumentationFile>C:\Users\etienne.pierrot.ext\source\repos\PaymentChallenge\src\PaymentChallenge.WebApi\PaymentChallenge.WebApi.xml</DocumentationFile>
+      <OutputPath></OutputPath>
+      <NoWarn>1701;1702;1591</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="FluentValidation.AspNetCore" Version="8.6.1" />
+      <PackageReference Include="Swashbuckle.AspNetCore" Version="5.0.0" />
+    </ItemGroup>
+
     <ItemGroup>
       <ProjectReference Include="..\PaymentChallenge.AcquirerBank\PaymentChallenge.AcquirerBank.csproj" />
       <ProjectReference Include="..\PaymentChallenge.Domain\PaymentChallenge.Domain.csproj" />
