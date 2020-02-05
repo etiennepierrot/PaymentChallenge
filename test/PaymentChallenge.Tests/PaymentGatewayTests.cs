@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Xunit;
 using FluentAssertions;
 using PaymentChallenge.AcquirerBank;
-using PaymentChallenge.Domain.AcquiringBank;
 using PaymentChallenge.Domain.Cards;
 using PaymentChallenge.Domain.Merchants;
 using PaymentChallenge.Domain.Payments;
@@ -19,8 +18,7 @@ namespace PaymentChallenge.Tests
         private readonly FakeIdGenerator _idGenerator;
         private readonly PaymentGateway _paymentGateway;
         private readonly PaymentRepository _paymentRepository;
-        private readonly MockAcquiringBankGateway _acquiringBankGateway = new MockAcquiringBankGateway();
-        
+
         private readonly Card _card = new Card("4242424242424242", "100", "1212" );
         private readonly Money _amountPaymentFailedInsufficientFund = new Money(4242, Currency.EUR);
         private int _amountTimeout = 666;
@@ -30,7 +28,7 @@ namespace PaymentChallenge.Tests
             _merchant = new Merchant("FancyShop");
             _idGenerator = new FakeIdGenerator();
             _paymentRepository = new InMemoryPaymentRepository();
-            _paymentGateway = new PaymentGateway(_paymentRepository, _idGenerator, _acquiringBankGateway);
+            _paymentGateway = new PaymentGateway(_paymentRepository, _idGenerator, new AcquirerBankAdapterImpl(new MockAcquiringBankGateway()));
         }
 
         
@@ -44,37 +42,25 @@ namespace PaymentChallenge.Tests
         [Fact]
         public async Task Forward_A_Payment_To_Acquiring_Bank()
         {
+            _idGenerator.NextPaymentId("Forward_A_Payment_To_Acquiring_Bank");
             var amountToCharge = new Money(1000, Currency.EUR);
             var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchant.Id, amountToCharge));
-
-            MockAcquiringBankGateway.ForwardedPayments.Should()
-                .BeEquivalentTo(new List<BankPaymentDto>()
-                {
-                    new BankPaymentDto()
-                    {
-                        Amount = 1000,
-                        Currency = "EUR",
-                        CardNumber = "4242424242424242",
-                        Cvv = "100",
-                        ExpirationDate = "1212"
-                    }
-                });    
+            MockAcquiringBankGateway.ForwardedPayments.ContainsKey("Forward_A_Payment_To_Acquiring_Bank").Should().BeTrue();
 
         }
 
         /// <summary>
         /// As a Merchant (FancyShop)
         /// Given a network issue (timeout)
-        /// When the Merchant request a payment processing
-        /// Then the status should be nicely reconciliate
+        /// When the Merchant request a payment processing and the payment has been already been process by the Acquirer Bank
+        /// Then the payment should be retry without double charging
         /// </summary>
         [Fact]
-        public async Task Reconciliate_After_Timeout_Acquirer()
+        public async Task Idempotency()
         {
             var amountToCharge = new Money(_amountTimeout, Currency.EUR);
             var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchant.Id, amountToCharge));
-
-            payment.LeftOrDefault().PaymentStatus.Should().Be(PaymentStatus.Fail);
+            payment.LeftOrDefault().PaymentStatus.Should().Be(PaymentStatus.Success);
 
         }
         
@@ -154,7 +140,7 @@ namespace PaymentChallenge.Tests
 
 
         //  TODO scenario
-        //  timeoutexception gateway, retry, and idempotency
+        //  the bankacquirer reference should be persisted
         //  Error payment (bad cardnumber, no fund)
         //  Format validation 
         //  List payment merchant

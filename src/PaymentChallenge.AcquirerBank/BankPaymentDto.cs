@@ -1,8 +1,6 @@
-using PaymentChallenge.Domain.Payments;
-
-namespace PaymentChallenge.Domain.AcquiringBank
+namespace PaymentChallenge.AcquirerBank
 {
-    public struct BankPaymentDto
+    internal struct BankPaymentDto
     {
         public string CardNumber { get; set; }
         public string Cvv { get; set; }

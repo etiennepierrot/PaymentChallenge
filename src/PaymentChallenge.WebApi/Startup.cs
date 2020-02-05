@@ -1,17 +1,10 @@
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using PaymentChallenge.AcquirerBank;
 using PaymentChallenge.Domain;
-using PaymentChallenge.Domain.AcquiringBank;
 using PaymentChallenge.Domain.Payments;
 using PaymentChallenge.Persistence;
 
@@ -31,7 +24,7 @@ namespace PaymentChallenge.WebApi
         {
             services.AddControllers();
             services.AddTransient<PaymentRepository, InMemoryPaymentRepository>();
-            services.AddTransient<AcquiringBankGateway, MockAcquiringBankGateway>();
+            services.AddTransient<MockAcquiringBankGateway>();
             services.AddTransient<IdGenerator, PaymentIdGenerator>();
             services.AddTransient<PaymentGateway>();
 

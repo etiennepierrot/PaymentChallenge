@@ -1,4 +1,4 @@
-namespace PaymentChallenge.Domain.AcquiringBank
+namespace PaymentChallenge.AcquirerBank
 {
     public struct ResultDto
     {
@@ -11,4 +11,6 @@ namespace PaymentChallenge.Domain.AcquiringBank
         public string Status { get; }
         public string PaymentReference { get; }
     }
+
+
 }

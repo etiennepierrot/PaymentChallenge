@@ -8,21 +8,22 @@ namespace PaymentChallenge.Persistence
 {
     public class InMemoryPaymentRepository : PaymentRepository
     {
-        private static readonly Dictionary<PaymentId, Payment> _databag = new Dictionary<PaymentId, Payment>();
+        private static readonly Dictionary<PaymentId, Payment> Databag = new Dictionary<PaymentId, Payment>();
         public async Task<Payment> GetAsync(PaymentId paymentId)
         {
-            return await Task.FromResult(_databag[paymentId]);
+            return await Task.FromResult(Databag[paymentId]);
         }
 
         public async Task<List<Payment>> GetPaymentsAsync(MerchantId merchantId)
         {
-            return await Task.FromResult(_databag.Values
-                .Where(p => p.MerchantId == merchantId).ToList());
+            return await Task.FromResult(Databag.Values
+                .Where(p => p.MerchantId == merchantId)
+                .ToList());
         }
 
         public async Task SaveAsync(Payment payment)
         {
-             _databag.Add(payment.PaymentId, payment);
+             Databag.Add(payment.PaymentId, payment);
              await Task.CompletedTask;
         }
     }

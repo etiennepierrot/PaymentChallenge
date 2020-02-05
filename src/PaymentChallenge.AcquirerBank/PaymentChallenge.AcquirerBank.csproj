@@ -5,6 +5,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Polly" Version="7.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\PaymentChallenge.Domain\PaymentChallenge.Domain.csproj" />
     </ItemGroup>
 

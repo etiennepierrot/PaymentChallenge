@@ -1,10 +1,6 @@
-using System;
-using System.Net;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using FluentValidation.Results;
 using PaymentChallenge.Domain.AcquiringBank;
-using PaymentChallenge.Domain.Merchants;
 
 namespace PaymentChallenge.Domain.Payments
 {
@@ -12,15 +8,15 @@ namespace PaymentChallenge.Domain.Payments
     {
         private readonly PaymentRepository _paymentRepository;
         private readonly IdGenerator _idGenerator;
-        private readonly AcquiringBankGateway _bankGateway;
         private readonly PaymentRequestValidator _paymentRequestValidator;
+        private readonly AcquirerBankAdapter _acquirerBankAdapter;
 
-        public PaymentGateway(PaymentRepository paymentRepository, IdGenerator idGenerator, AcquiringBankGateway bankGateway)
+        public PaymentGateway(PaymentRepository paymentRepository, IdGenerator idGenerator, AcquirerBankAdapter acquirerBankAdapter)
         {
             _paymentRepository = paymentRepository;
             _idGenerator = idGenerator;
-            _bankGateway = bankGateway;
             _paymentRequestValidator = new PaymentRequestValidator();
+            _acquirerBankAdapter = acquirerBankAdapter;
         }
 
         public async Task<Either<PaymentResponse, ValidationResult>> ProcessAsync(PaymentRequest command)
@@ -29,23 +25,13 @@ namespace PaymentChallenge.Domain.Payments
             if (!validationResult.IsValid) return new Either<PaymentResponse, ValidationResult>(validationResult);
 
             var paymentId = _idGenerator.GeneratePaymentId();
-            var bankResponse = await _bankGateway.AuthorizePaymentAsync(new BankPaymentDto
-            {
-                Amount = command.AmountToCharge.Amount,
-                Currency = command.AmountToCharge.Currency.ToString(),
-                CardNumber = command.Card.CardNumber,
-                Cvv = command.Card.Cvv,
-                ExpirationDate = command.Card.ExpirationDate,
-                Reference = paymentId
-            });
 
-            PaymentStatus paymentStatus = bankResponse.Status == "success" ? PaymentStatus.Success : PaymentStatus.Fail;
-            Payment payment = new Payment(command.MerchantId, command.Card, command.AmountToCharge, paymentId, paymentStatus, command.MerchantReference);
+            var bankResponse = await _acquirerBankAdapter.BankResponse(command, paymentId);
+
+            Payment payment = new Payment(command.MerchantId, command.Card, command.AmountToCharge, paymentId, bankResponse.Status, command.MerchantReference);
             await _paymentRepository.SaveAsync(payment);
             return new Either<PaymentResponse, ValidationResult>(new PaymentResponse(payment.Status, paymentId));
 
         }
-
-
     }
 }

@@ -1,33 +1,41 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using PaymentChallenge.Domain.AcquiringBank;
-using PaymentChallenge.Domain.Payments;
 
 namespace PaymentChallenge.AcquirerBank
 {
 
-    public class MockAcquiringBankGateway : AcquiringBankGateway
+    public class MockAcquiringBankGateway
     {
         public MockAcquiringBankGateway()
         {
-            ForwardedPayments = new List<BankPaymentDto>();
+            ForwardedPayments = new Dictionary<string, ResultDto>();
         }
 
-        public static List<BankPaymentDto> ForwardedPayments { get; private set; }
+        public static Dictionary<string, ResultDto> ForwardedPayments { get; private set; }
 
-        public async Task<ResultDto> AuthorizePaymentAsync(BankPaymentDto bankPaymentDto)
+        internal async Task<ResultDto> AuthorizePaymentAsync(BankPaymentDto bankPaymentDto)
         {
-            if(bankPaymentDto.Amount == 666) throw  new WebException("", WebExceptionStatus.Timeout);
+            
+            if (bankPaymentDto.Reference != null && ForwardedPayments.ContainsKey(bankPaymentDto.Reference))
+            {
+                return await Task.FromResult(ForwardedPayments[bankPaymentDto.Reference]);
+            }
+            else
+            {
+                
+                ResultDto resultDto = bankPaymentDto.Amount == 4242 
+                    ? new ResultDto("fail", "myPaymentReference") 
+                    : new ResultDto("success", "myPaymentReference");
 
-            ForwardedPayments.Add(bankPaymentDto);
-            return await Task.FromResult(bankPaymentDto.Amount == 4242 
-                ? new ResultDto("fail", "myPaymentReference") 
-                : new ResultDto("success", "myPaymentReference"));
+                ForwardedPayments.Add(bankPaymentDto.Reference ?? Guid.NewGuid().ToString(), resultDto);
+                if(bankPaymentDto.Amount == 666) 
+                    throw new WebException("timeout trigger by special amount for testing", WebExceptionStatus.Timeout);
 
+                return await Task.FromResult(resultDto);
+
+            }
         }
-
-       
     }
 }
