@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using FluentValidation.TestHelper;
 using PaymentChallenge.Domain.Cards;
 using PaymentChallenge.Domain.Merchants;
@@ -12,7 +11,7 @@ namespace PaymentChallenge.Tests
     {
 
         private PaymentRequestValidator _validator;
-        private readonly Merchant _merchant = new Merchant("FancyShop");
+        private readonly MerchantId _merchantId = "FancyShop";
         private readonly Card _invalidCard = new Card("42424242424242427", "1000", "1213" );
 
 

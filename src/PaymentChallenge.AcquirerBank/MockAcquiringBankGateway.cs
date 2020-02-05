@@ -28,9 +28,6 @@ namespace PaymentChallenge.AcquirerBank
 
         }
 
-        public async Task<ResultDto> RetrieveAuthorization(string reference)
-        {
-            return await Task.FromResult(ForwardedPayments.SingleOrDefault(p => p.Reference == reference));
-        }
+       
     }
 }

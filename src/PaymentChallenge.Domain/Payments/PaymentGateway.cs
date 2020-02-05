@@ -29,25 +29,15 @@ namespace PaymentChallenge.Domain.Payments
             if (!validationResult.IsValid) return new Either<PaymentResponse, ValidationResult>(validationResult);
 
             var paymentId = _idGenerator.GeneratePaymentId();
-            ResultDto bankResponse;
-            try
+            var bankResponse = await _bankGateway.AuthorizePaymentAsync(new BankPaymentDto
             {
-                bankResponse = await _bankGateway.AuthorizePaymentAsync(new BankPaymentDto
-                {
-                    Amount = command.AmountToCharge.Amount,
-                    Currency = command.AmountToCharge.Currency.ToString(),
-                    CardNumber = command.Card.CardNumber,
-                    Cvv = command.Card.Cvv,
-                    ExpirationDate = command.Card.ExpirationDate,
-                    Reference = paymentId
-                });
-            }
-            catch (WebException e)
-            {
-                //TODO Add logging
-                bankResponse = await _bankGateway.RetrieveAuthorization(paymentId);
-            }
-
+                Amount = command.AmountToCharge.Amount,
+                Currency = command.AmountToCharge.Currency.ToString(),
+                CardNumber = command.Card.CardNumber,
+                Cvv = command.Card.Cvv,
+                ExpirationDate = command.Card.ExpirationDate,
+                Reference = paymentId
+            });
 
             PaymentStatus paymentStatus = bankResponse.Status == "success" ? PaymentStatus.Success : PaymentStatus.Fail;
             Payment payment = new Payment(command.MerchantId, command.Card, command.AmountToCharge, paymentId, paymentStatus, command.MerchantReference);
@@ -56,6 +46,6 @@ namespace PaymentChallenge.Domain.Payments
 
         }
 
-       
+
     }
 }
