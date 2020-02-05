@@ -12,7 +12,9 @@
         <PackageReference Include="FluentAssertions" Version="5.10.0" />
     </ItemGroup>
     <ItemGroup>
+      <ProjectReference Include="..\..\src\PaymentChallenge.AcquirerBank\PaymentChallenge.AcquirerBank.csproj" />
       <ProjectReference Include="..\..\src\PaymentChallenge.Domain\PaymentChallenge.Domain.csproj" />
+      <ProjectReference Include="..\..\src\PaymentChallenge.Persistence\PaymentChallenge.Persistence.csproj" />
     </ItemGroup>
     <ItemGroup>
         <DotNetCliToolReference Include="Microsoft.DotNet.Watcher.Tools" Version="1.0.0" />

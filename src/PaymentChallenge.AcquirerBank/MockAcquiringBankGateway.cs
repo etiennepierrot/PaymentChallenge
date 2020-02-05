@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using PaymentChallenge.Domain.AcquiringBank;
 
-namespace PaymentChallenge.Tests
+namespace PaymentChallenge.AcquirerBank
 {
     public class MockAcquiringBankGateway : AcquiringBankGateway
     {
