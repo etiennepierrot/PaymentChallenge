@@ -18,9 +18,19 @@ namespace PaymentChallenge.Domain.Merchants
         {
             return x._id == y._id;
         }
-        public static bool operator !=(MerchantId x, MerchantId y) 
+        public static bool operator != (MerchantId x, MerchantId y) 
         {
             return !(x == y);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return _id.Equals(((MerchantId)obj)._id);
+        }
+
+        public override int GetHashCode()
+        {
+            return _id.GetHashCode();
         }
     }
 }
