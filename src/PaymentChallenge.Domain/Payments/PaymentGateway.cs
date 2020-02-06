@@ -21,6 +21,8 @@ namespace PaymentChallenge.Domain.Payments
 
         public async Task<Either<PaymentResponse, ValidationResult>> ProcessAsync(PaymentRequest command)
         {
+           
+
             ValidationResult validationResult = _paymentRequestValidator.Validate(command);
             if (!validationResult.IsValid) return new Either<PaymentResponse, ValidationResult>(validationResult);
 

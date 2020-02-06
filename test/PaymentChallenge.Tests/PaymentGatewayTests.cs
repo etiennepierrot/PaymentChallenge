@@ -68,16 +68,33 @@ namespace PaymentChallenge.Tests
 
         /// <summary>
         /// As a Merchant (FancyShop)
-        /// Given a network issue (timeout)
+        /// Given a network issue (timeout) between Gateway and Acquirer Bank
         /// When the Merchant request a payment processing and the payment has been already been process by the Acquirer Bank
         /// Then the payment should be retry without double charging
         /// </summary>
         [Fact]
-        public async Task Idempotency()
+        public async Task Idempotency_AcquiringBanking_Side()
         {
             var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountToCharge));
             payment.LeftOrDefault().PaymentStatus.Should().Be(PaymentStatus.Success);
         }
+
+        /// <summary>
+        /// As a Merchant (FancyShop)
+        /// Given a network issue (timeout) between Merchant and Payment Gateway
+        /// And the merchant provider a Merchant Reference
+        /// When the Merchant retry to request a payment processing and the payment has been already been process by the Payment Gateway
+        /// Then the Payment Gateway return the PaymentResponse of the previous Gateway
+        /// </summary>
+        [Fact]
+        public async Task Idempotency_Merchant_Side()
+        {
+            var payment1 = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountToCharge, "randomPaymentReference"));
+            var payment2 = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountToCharge, "randomPaymentReference"));
+
+            payment2.LeftOrDefault().PaymentStatus.Should().Be(payment1);
+        }
+
         
         /// <summary>
         /// As a Merchant (FancyShop)
