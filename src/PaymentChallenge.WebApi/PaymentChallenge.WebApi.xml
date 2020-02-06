@@ -4,6 +4,36 @@
         <name>PaymentChallenge.WebApi</name>
     </assembly>
     <members>
+        <member name="P:PaymentChallenge.WebApi.Controllers.Dto.MoneyDto.Amount">
+            <summary>
+            the amount to charge in cents
+            </summary>
+        </member>
+        <member name="P:PaymentChallenge.WebApi.Controllers.Dto.MoneyDto.Currency">
+            <summary>
+            the currency (only euros is supported (EUR) ISO 4217 (https://fr.wikipedia.org/wiki/ISO_4217)
+            </summary>
+        </member>
+        <member name="P:PaymentChallenge.WebApi.Controllers.Dto.PaymentRequestDto.Card">
+            <summary>
+            The card use for the payment
+            </summary>
+        </member>
+        <member name="P:PaymentChallenge.WebApi.Controllers.Dto.PaymentRequestDto.AmountToCharge">
+            <summary>
+            The amount to charge
+            </summary>
+        </member>
+        <member name="P:PaymentChallenge.WebApi.Controllers.Dto.PaymentResponseDto.PaymentStatus">
+            <summary>
+            The status of the payment : Success or Fail
+            </summary>
+        </member>
+        <member name="P:PaymentChallenge.WebApi.Controllers.Dto.PaymentResponseDto.PaymentId">
+            <summary>
+            Id of the payment
+            </summary>
+        </member>
         <member name="M:PaymentChallenge.WebApi.Controllers.PaymentsController.Post(PaymentChallenge.WebApi.Controllers.Dto.PaymentRequestDto)">
              <summary>
              Make a payment
@@ -22,7 +52,7 @@
                          "MerchantId": "FancyShop",
                          "AmountToCharge": {
                              "Amount": 1000,
-                             "Currency": 0
+                             "Currency": "EUR"
                          },
                          "MerchantReference": "eazeazea4d5q4s"
                      }

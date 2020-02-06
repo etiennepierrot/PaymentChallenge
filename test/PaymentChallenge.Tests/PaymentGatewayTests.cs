@@ -15,19 +15,16 @@ namespace PaymentChallenge.Tests
 {
     public class PaymentGatewayTests
     {
-        private readonly Merchant _merchant;
+        private readonly MerchantId _merchantId = new MerchantId("FancyShop");
         private readonly FakeIdGenerator _idGenerator;
         private readonly PaymentGateway _paymentGateway;
         private readonly PaymentRepository _paymentRepository;
-
         private readonly Card _card = new Card("4242424242424242", "100", "1212" );
         private readonly Money _amountPaymentFailedInsufficientFund = new Money(4242, Currency.EUR);
-        private int _amountTimeout = 666;
-        private Money _amountToCharge = new Money(1000, Currency.EUR);
+        private readonly Money _amountToCharge = new Money(1000, Currency.EUR);
 
         public PaymentGatewayTests()
         {
-            _merchant = new Merchant("FancyShop");
             _idGenerator = new FakeIdGenerator();
             _paymentRepository = new InMemoryPaymentRepository();
             _paymentGateway = new PaymentGateway(_paymentRepository, _idGenerator, new AcquirerBankAdapterImpl(new MockAcquiringBankGateway()));
@@ -45,7 +42,7 @@ namespace PaymentChallenge.Tests
         public async Task Forward_A_Payment_To_Acquiring_Bank()
         {
             _idGenerator.NextPaymentId("Forward_A_Payment_To_Acquiring_Bank");
-            var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchant.Id, _amountToCharge));
+            var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountToCharge));
             MockAcquiringBankGateway.ForwardedPayments.ContainsKey("Forward_A_Payment_To_Acquiring_Bank")
                 .Should().BeTrue();
 
@@ -61,7 +58,7 @@ namespace PaymentChallenge.Tests
         public async Task Persist_Bank_Reference()
         {
             _idGenerator.NextPaymentId("Persist_Bank_Reference");
-            var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchant.Id, _amountToCharge));
+            var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountToCharge));
 
             Payment paymentPersisted = await _paymentRepository.GetAsync(payment.LeftOrDefault().PaymentId);
 
@@ -78,7 +75,7 @@ namespace PaymentChallenge.Tests
         [Fact]
         public async Task Idempotency()
         {
-            var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchant.Id, _amountToCharge));
+            var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountToCharge));
             payment.LeftOrDefault().PaymentStatus.Should().Be(PaymentStatus.Success);
         }
         
@@ -92,7 +89,7 @@ namespace PaymentChallenge.Tests
         public async Task Return_PaymentStatus_Failed()
         {
             _idGenerator.NextPaymentId("PAY-Return_PaymentStatusFailed");
-            var paymentResponse = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchant.Id, _amountPaymentFailedInsufficientFund) );
+            var paymentResponse = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountPaymentFailedInsufficientFund) );
             paymentResponse.LeftOrDefault().Should()
                 .BeEquivalentTo(new PaymentResponse(PaymentStatus.Fail, "PAY-Return_PaymentStatusFailed"));
         }
@@ -108,7 +105,7 @@ namespace PaymentChallenge.Tests
         {
             _idGenerator.NextPaymentId("PAY-Return_PaymentStatus");
             
-            var paymentResponse = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchant.Id, _amountToCharge) );
+            var paymentResponse = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountToCharge) );
             
             paymentResponse.LeftOrDefault().Should()
                 .BeEquivalentTo(new PaymentResponse(PaymentStatus.Success, "PAY-Return_PaymentStatus"));
@@ -125,7 +122,7 @@ namespace PaymentChallenge.Tests
         public async Task Retrieve_PaymentInfo()
         {
             _idGenerator.NextPaymentId("PAY-Retrieve_PaymentInfo");
-            var paymentRequest = new PaymentRequest(_card, _merchant.Id, _amountToCharge, "ORDER-123");
+            var paymentRequest = new PaymentRequest(_card, _merchantId, _amountToCharge, "ORDER-123");
 
             var paymentResponse = await _paymentGateway.ProcessAsync(paymentRequest);
             
@@ -135,7 +132,7 @@ namespace PaymentChallenge.Tests
           
             payment.Should()
                 .BeEquivalentTo(
-                    Payment.CreateFromPaymentRequest(new PaymentRequest(_card, _merchant.Id, _amountToCharge, "ORDER-123"), 
+                    Payment.CreateFromPaymentRequest(new PaymentRequest(_card, _merchantId, _amountToCharge, "ORDER-123"), 
                         "PAY-Retrieve_PaymentInfo" ,
                         new AcquirerBankResponse(PaymentStatus.Success, "myPaymentReference")));
         }

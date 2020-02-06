@@ -1,13 +1,10 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using PaymentChallenge.Domain.Cards;
 using PaymentChallenge.Domain.Payments;
-using PaymentChallenge.Domain.Values;
 using PaymentChallenge.WebApi.Controllers.Dto;
 using ValidationResult = FluentValidation.Results.ValidationResult;
 
@@ -45,7 +42,7 @@ namespace PaymentChallenge.WebApi.Controllers
         ///             "MerchantId": "FancyShop",
         ///             "AmountToCharge": {
         ///                 "Amount": 1000,
-        ///                 "Currency": 0
+        ///                 "Currency": "EUR"
         ///             },
         ///             "MerchantReference": "eazeazea4d5q4s"
         ///         }
@@ -57,66 +54,27 @@ namespace PaymentChallenge.WebApi.Controllers
         public async Task<IActionResult> Post([FromBody][Required] PaymentRequestDto paymentRequestDto)
         {
 
-            var command = CreateCommand(paymentRequestDto);
-            var payment = await _paymentGateway.ProcessAsync(command);
+            var command = DtoConverter.CreateCommand(paymentRequestDto);
+            var paymentResponse = await _paymentGateway.ProcessAsync(command);
 
-            return payment.Match<IActionResult>(response => Created(@"/api/payments",new PaymentResponseDto
+            return paymentResponse.Match<IActionResult>(r => Created(@"/api/payments",new PaymentResponseDto
                 {
-                    PaymentId = response.PaymentId,
-                    PaymentStatus = response.PaymentStatus
+                    PaymentId = r.PaymentId,
+                    PaymentStatus = r.PaymentStatus.ToString()
                 }),
-                result => new JsonResult(Detail(result))
+                vr => new JsonResult(DtoConverter.ToDto(vr))
                 {
                     StatusCode = 400
                 });
         }
 
-        private static ValidationErrorDto Detail(ValidationResult result)
-        {
-            return new ValidationErrorDto()
-            {
-                Errors = result.Errors.Select(x => new Error
-                {
-                    Field = x.PropertyName,
-                    Message = x.ErrorMessage
-                }).ToList()
-            };
-        }
-
-        public class Error
-        {
-            public string Field { get; set; }
-            public string Message { get; set; }
-        }
-        public class ValidationErrorDto
-        {
-            public List<Error> Errors { get; set; }
-        }
+       
 
         [HttpGet]
         public async Task<IActionResult> Get(string paymentId)
         {
             var payment = await _paymentRepository.GetAsync(paymentId);
             return Ok(payment);
-        }
-
-        private static PaymentRequest CreateCommand(PaymentRequestDto paymentRequest)
-        {
-            return new PaymentRequest(
-                DtoToModel(paymentRequest),
-                paymentRequest.MerchantId, 
-                DtoToModel(paymentRequest.AmountToCharge), 
-                paymentRequest.MerchantReference);
-        }
-
-        private static Money DtoToModel(MoneyDto moneyDto)
-        {
-            return new Money(moneyDto.Amount, moneyDto.Currency);
-        }
-
-        private static Card DtoToModel(PaymentRequestDto paymentRequest)
-        {
-            return new Card(paymentRequest.Card.CardNumber, paymentRequest.Card.Cvv, paymentRequest.Card.ExpirationDate);
         }
     }
 }

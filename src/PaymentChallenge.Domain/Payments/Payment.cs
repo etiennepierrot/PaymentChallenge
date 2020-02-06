@@ -27,14 +27,6 @@ namespace PaymentChallenge.Domain.Payments
             };
         }
 
-        /// <summary>
-        /// I could use the proxy pattern to only authorize the usage of this ctor for the repository but it's seem
-        /// overenginnering
-        /// </summary>
-        public Payment()
-        {
-            
-        }
 
         public MerchantId MerchantId { get; private set; }
         public Card Card { get;  private set;  }

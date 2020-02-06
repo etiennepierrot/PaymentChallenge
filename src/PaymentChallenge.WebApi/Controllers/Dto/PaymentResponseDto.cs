@@ -4,7 +4,13 @@ namespace PaymentChallenge.WebApi.Controllers.Dto
 {
     public class PaymentResponseDto
     {
-        public PaymentStatus PaymentStatus { get; set; }
+        /// <summary>
+        /// The status of the payment : Success or Fail
+        /// </summary>
+        public string PaymentStatus { get; set; }
+        /// <summary>
+        /// Id of the payment
+        /// </summary>
         public string PaymentId { get; set; }
     }
 }

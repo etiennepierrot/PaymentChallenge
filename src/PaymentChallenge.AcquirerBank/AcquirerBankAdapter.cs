@@ -23,7 +23,9 @@ namespace PaymentChallenge.AcquirerBank
                 .Handle<WebException>()
                 .WaitAndRetryAsync(3, i => TimeSpan.FromSeconds(1));
 
-            ResultDto dto = await policy.ExecuteAsync( (async () => await _acquiringBankGateway.AuthorizePaymentAsync(new BankPaymentDto
+            ResultDto dto = await policy.ExecuteAsync( (async () => await 
+                //TODO we need to to log the input and the ouput and filter the cardnumber for obvious privacy reason
+                _acquiringBankGateway.AuthorizePaymentAsync(new BankPaymentDto
             {
                 Amount = command.AmountToCharge.Amount,
                 Currency = command.AmountToCharge.Currency.ToString(),

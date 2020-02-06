@@ -23,7 +23,7 @@ namespace PaymentChallenge.Domain.Cards
                 var lastDigits = _cardNumber.Substring(_cardNumber.Length - 4, 4);
                 var requiredMask = new string('X', _cardNumber.Length - firstDigits.Length - lastDigits.Length);
                 var maskedString = string.Concat(firstDigits, requiredMask, lastDigits);
-                return  Regex.Replace(maskedString, ".{4}", "$0 ").TrimEnd();
+                return Regex.Replace(maskedString, ".{4}", "$0 ").TrimEnd();
             }
         }
 

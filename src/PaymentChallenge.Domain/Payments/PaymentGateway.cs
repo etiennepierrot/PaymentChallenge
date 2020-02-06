@@ -29,6 +29,8 @@ namespace PaymentChallenge.Domain.Payments
             var bankResponse = await _acquirerBankAdapter.BankResponse(command, paymentId);
 
             Payment payment = Payment.CreateFromPaymentRequest(command, paymentId, bankResponse);
+            
+            //TODO unit of work pattern if we need to make other change in our future DB
             await _paymentRepository.SaveAsync(payment);
             return new Either<PaymentResponse, ValidationResult>(new PaymentResponse(payment.Status, paymentId));
 
