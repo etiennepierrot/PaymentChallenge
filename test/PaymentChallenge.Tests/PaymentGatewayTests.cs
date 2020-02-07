@@ -10,6 +10,8 @@ using PaymentChallenge.Domain.Merchants;
 using PaymentChallenge.Domain.Payments;
 using PaymentChallenge.Domain.Values;
 using PaymentChallenge.Persistence;
+using LanguageExt;
+using static LanguageExt.Prelude;
 
 namespace PaymentChallenge.Tests
 {
@@ -42,7 +44,7 @@ namespace PaymentChallenge.Tests
         public async Task Forward_A_Payment_To_Acquiring_Bank()
         {
             _idGenerator.NextPaymentId("Forward_A_Payment_To_Acquiring_Bank");
-            var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountToCharge));
+            var payment = await _paymentGateway.ProcessPaymentRequestAsync(new PaymentRequest(_card, _merchantId, _amountToCharge));
             MockAcquiringBankGateway.ForwardedPayments.ContainsKey("Forward_A_Payment_To_Acquiring_Bank")
                 .Should().BeTrue();
 
@@ -58,11 +60,15 @@ namespace PaymentChallenge.Tests
         public async Task Persist_Bank_Reference()
         {
             _idGenerator.NextPaymentId("Persist_Bank_Reference");
-            var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountToCharge));
-
-            Payment paymentPersisted = await _paymentRepository.GetAsync(payment.LeftOrDefault().PaymentId);
-
-            paymentPersisted.BankReference.Should().Be(new AcquirerBankReference("myPaymentReference"));
+            var payment = await _paymentGateway.ProcessPaymentRequestAsync(new PaymentRequest(_card, _merchantId, _amountToCharge));
+            payment.IfLeft(async response =>
+            {
+                var paymentPersisted = await _paymentRepository.GetAsync(response.PaymentId);
+                paymentPersisted.IfSome(p =>
+                {
+                    p.BankReference.Should().Be(new AcquirerBankReference("myPaymentReference"));
+                });
+            });
 
         }
 
@@ -75,8 +81,13 @@ namespace PaymentChallenge.Tests
         [Fact]
         public async Task Idempotency_AcquiringBanking_Side()
         {
-            var payment = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountToCharge));
-            payment.LeftOrDefault().PaymentStatus.Should().Be(PaymentStatus.Success);
+            _idGenerator.NextPaymentId("Idempotency_AcquiringBanking_Side");
+            var payment = await _paymentGateway.ProcessPaymentRequestAsync(new PaymentRequest(_card, _merchantId, _amountToCharge));
+
+            payment.IfLeft(response =>
+            {
+                response.PaymentStatus.Should().Be(PaymentStatus.Success);
+            });
         }
 
         /// <summary>
@@ -89,10 +100,19 @@ namespace PaymentChallenge.Tests
         [Fact]
         public async Task Idempotency_Merchant_Side()
         {
-            var payment1 = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountToCharge, "randomPaymentReference"));
-            var payment2 = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountToCharge, "randomPaymentReference"));
-
-            payment2.LeftOrDefault().PaymentStatus.Should().Be(payment1);
+            PaymentRequest paymentRequest = new PaymentRequest(_card, _merchantId, _amountToCharge, "randomPaymentReference");
+            
+            _idGenerator.NextPaymentId("Idempotency_Merchant_Side-1");
+            var payment1 = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest);
+            payment1.IfLeft(async r1 =>
+            {
+                _idGenerator.NextPaymentId("Idempotency_Merchant_Side-2");
+                var payment2 = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest);
+                payment2.IfLeft(r2 =>
+                {
+                    r2.Should().Be(r1);
+                });
+            });
         }
 
         
@@ -106,9 +126,11 @@ namespace PaymentChallenge.Tests
         public async Task Return_PaymentStatus_Failed()
         {
             _idGenerator.NextPaymentId("PAY-Return_PaymentStatusFailed");
-            var paymentResponse = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountPaymentFailedInsufficientFund) );
-            paymentResponse.LeftOrDefault().Should()
-                .BeEquivalentTo(new PaymentResponse(PaymentStatus.Fail, "PAY-Return_PaymentStatusFailed"));
+            var paymentRequest = new PaymentRequest(_card, _merchantId, _amountPaymentFailedInsufficientFund);
+            var paymentResponse = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest );
+            paymentResponse.IfLeft(r => r.Should()
+                .BeEquivalentTo(new PaymentResponse(PaymentStatus.Fail, "PAY-Return_PaymentStatusFailed")));
+
         }
         
         /// <summary>
@@ -121,11 +143,13 @@ namespace PaymentChallenge.Tests
         public async Task Return_PaymentStatus()
         {
             _idGenerator.NextPaymentId("PAY-Return_PaymentStatus");
-            
-            var paymentResponse = await _paymentGateway.ProcessAsync(new PaymentRequest(_card, _merchantId, _amountToCharge) );
-            
-            paymentResponse.LeftOrDefault().Should()
-                .BeEquivalentTo(new PaymentResponse(PaymentStatus.Success, "PAY-Return_PaymentStatus"));
+
+            var paymentRequest = new PaymentRequest(_card, _merchantId, _amountToCharge);
+            var paymentResponse = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest );
+
+            paymentResponse.IfLeft(r =>
+                r.Should().BeEquivalentTo(new PaymentResponse(PaymentStatus.Success, "PAY-Return_PaymentStatus")));
+
         }
         
 
@@ -141,17 +165,21 @@ namespace PaymentChallenge.Tests
             _idGenerator.NextPaymentId("PAY-Retrieve_PaymentInfo");
             var paymentRequest = new PaymentRequest(_card, _merchantId, _amountToCharge, "ORDER-123");
 
-            var paymentResponse = await _paymentGateway.ProcessAsync(paymentRequest);
-            
-            
-            Payment payment = await _paymentRepository.GetAsync(paymentResponse.LeftOrDefault().PaymentId);
-            
-          
-            payment.Should()
-                .BeEquivalentTo(
-                    Payment.CreateFromPaymentRequest(new PaymentRequest(_card, _merchantId, _amountToCharge, "ORDER-123"), 
-                        "PAY-Retrieve_PaymentInfo" ,
-                        new AcquirerBankResponse(PaymentStatus.Success, "myPaymentReference")));
+            var paymentResponse = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest);
+            paymentResponse.IfLeft( async r =>
+            {
+                var payment = await _paymentRepository.GetAsync(r.PaymentId);
+                payment.IfSome(p =>
+                {
+                    p.Should()
+                        .BeEquivalentTo(
+                            Payment.CreateFromPaymentRequest(
+                                new PaymentRequest(_card, _merchantId, _amountToCharge, "ORDER-123"),
+                                "PAY-Retrieve_PaymentInfo",
+                                new AcquirerBankResponse(PaymentStatus.Success, "myPaymentReference")));
+                });
+            });
+
         }
 
         
@@ -181,7 +209,7 @@ namespace PaymentChallenge.Tests
             _idGenerator.NextPaymentId($"PAY-{orderId}");
             Money amount = new Money(1000, Currency.EUR);
             var paymentRequest = new PaymentRequest(_card, merchantId, amount, orderId);
-            var processAsync = await _paymentGateway.ProcessAsync(paymentRequest);
+            var processAsync = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest);
         }
 
 

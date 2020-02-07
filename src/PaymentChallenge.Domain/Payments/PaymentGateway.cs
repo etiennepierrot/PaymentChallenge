@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
 using FluentValidation.Results;
+using LanguageExt;
 using PaymentChallenge.Domain.AcquiringBank;
+using static LanguageExt.Prelude;
 
 namespace PaymentChallenge.Domain.Payments
 {
@@ -19,24 +21,31 @@ namespace PaymentChallenge.Domain.Payments
             _acquirerBankAdapter = acquirerBankAdapter;
         }
 
-        public async Task<Either<PaymentResponse, ValidationResult>> ProcessAsync(PaymentRequest command)
+        public async Task<Either<PaymentResponse, ValidationResult>> ProcessPaymentRequestAsync(PaymentRequest command)
         {
-           
-
             ValidationResult validationResult = _paymentRequestValidator.Validate(command);
-            if (!validationResult.IsValid) return new Either<PaymentResponse, ValidationResult>(validationResult);
-
-            var paymentId = _idGenerator.GeneratePaymentId();
-
-            var bankResponse = await _acquirerBankAdapter.BankResponse(command, paymentId);
-
-            Payment payment = Payment.CreateFromPaymentRequest(command, paymentId, bankResponse);
-            
-            //TODO unit of work pattern if we need to make other change in our future DB
-            await _paymentRepository.SaveAsync(payment);
-            return new Either<PaymentResponse, ValidationResult>(new PaymentResponse(payment.Status, paymentId));
-
+            if (!validationResult.IsValid) return Right(validationResult);
+            return Left(await MakePayment(command));
         }
 
+        private async Task<PaymentResponse> MakePayment(PaymentRequest command)
+        {
+            var payment = await _paymentRepository.GetByMerchantReferenceAsync(command.MerchantId, command.MerchantReference);
+            return await payment.MatchAsync(p => new PaymentResponse(p.Status, p.PaymentId),
+                async () =>
+                {
+                    var paymentId = _idGenerator.GeneratePaymentId();
+                    var bankResponse = await _acquirerBankAdapter.BankResponse(command, paymentId);
+                    await CreatePayment(command, paymentId, bankResponse);
+                    return new PaymentResponse(bankResponse.Status, paymentId);
+                });
+        }
+
+        private async Task CreatePayment(PaymentRequest command, PaymentId paymentId, AcquirerBankResponse bankResponse)
+        {
+            Payment payment = Payment.CreateFromPaymentRequest(command, paymentId, bankResponse);
+            //TODO unit of work pattern if we need to make other change in our future DB
+            await _paymentRepository.SaveAsync(payment);
+        }
     }
 }

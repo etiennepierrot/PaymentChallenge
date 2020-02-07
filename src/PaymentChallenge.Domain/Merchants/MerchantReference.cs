@@ -1,4 +1,4 @@
-namespace PaymentChallenge.Domain.Payments
+namespace PaymentChallenge.Domain.Merchants
 {
     public struct MerchantReference
     {
@@ -11,5 +11,6 @@ namespace PaymentChallenge.Domain.Payments
         
         public static implicit operator string(MerchantReference merchantReference) => merchantReference._merchantReference;
         public static implicit operator MerchantReference(string str) => new MerchantReference(str);
+
     }
 }

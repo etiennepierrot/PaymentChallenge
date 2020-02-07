@@ -1,12 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PaymentChallenge.Domain.Payments;
 using PaymentChallenge.WebApi.Controllers.Dto;
-using ValidationResult = FluentValidation.Results.ValidationResult;
 
 namespace PaymentChallenge.WebApi.Controllers
 {
@@ -55,17 +52,17 @@ namespace PaymentChallenge.WebApi.Controllers
         {
 
             var command = DtoConverter.CreateCommand(paymentRequestDto);
-            var paymentResponse = await _paymentGateway.ProcessAsync(command);
+            var paymentResponse = await _paymentGateway.ProcessPaymentRequestAsync(command);
 
-            return paymentResponse.Match<IActionResult>(r => Created(@"/api/payments",new PaymentResponseDto
-                {
-                    PaymentId = r.PaymentId,
-                    PaymentStatus = r.PaymentStatus.ToString()
-                }),
+            return paymentResponse.Match<IActionResult>(
                 vr => new JsonResult(DtoConverter.ToDto(vr))
                 {
                     StatusCode = 400
-                });
+                },r => Created(@"/api/payments",new PaymentResponseDto
+                {
+                    PaymentId = r.PaymentId,
+                    PaymentStatus = r.PaymentStatus.ToString()
+                }));
         }
 
        

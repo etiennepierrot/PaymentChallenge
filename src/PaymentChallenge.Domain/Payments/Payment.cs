@@ -1,3 +1,4 @@
+using LanguageExt;
 using PaymentChallenge.Domain.AcquiringBank;
 using PaymentChallenge.Domain.Cards;
 using PaymentChallenge.Domain.Merchants;
@@ -33,7 +34,7 @@ namespace PaymentChallenge.Domain.Payments
         public Money Amount { get;  private set; }
         public PaymentId PaymentId { get;  private set; }
         public PaymentStatus Status { get;  private set; }
-        public string MerchantReference { get;  private set; }
+        public Option<MerchantReference> MerchantReference { get;  private set; }
         public AcquirerBankReference BankReference { get; private set; }
     }
 }
