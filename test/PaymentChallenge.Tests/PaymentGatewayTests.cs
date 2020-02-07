@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,7 +22,7 @@ namespace PaymentChallenge.Tests
         private readonly FakeIdGenerator _idGenerator;
         private readonly PaymentGateway _paymentGateway;
         private readonly PaymentRepository _paymentRepository;
-        private readonly Card _card = new Card("4242424242424242", "100", "1212" );
+        private readonly Card _card = new Card("4242424242424242", "100", "1212");
         private readonly Money _amountPaymentFailedInsufficientFund = new Money(4242, Currency.EUR);
         private readonly Money _amountToCharge = new Money(1000, Currency.EUR);
 
@@ -32,7 +33,7 @@ namespace PaymentChallenge.Tests
             _paymentGateway = new PaymentGateway(_paymentRepository, _idGenerator, new AcquirerBankAdapterImpl(new MockAcquiringBankGateway()));
         }
 
-        
+
 
         /// <summary>
         /// As a Merchant (FancyShop)
@@ -63,7 +64,7 @@ namespace PaymentChallenge.Tests
             var payment = await _paymentGateway.ProcessPaymentRequestAsync(new PaymentRequest(_card, _merchantId, _amountToCharge));
             payment.IfLeft(async response =>
             {
-                var paymentPersisted = await _paymentRepository.GetAsync(response.PaymentId);
+                var paymentPersisted = await _paymentRepository.GetAsync(_merchantId, response.PaymentId);
                 paymentPersisted.IfSome(p =>
                 {
                     p.BankReference.Should().Be(new AcquirerBankReference("myPaymentReference"));
@@ -101,7 +102,7 @@ namespace PaymentChallenge.Tests
         public async Task Idempotency_Merchant_Side()
         {
             PaymentRequest paymentRequest = new PaymentRequest(_card, _merchantId, _amountToCharge, "randomPaymentReference");
-            
+
             _idGenerator.NextPaymentId("Idempotency_Merchant_Side-1");
             var payment1 = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest);
             payment1.IfLeft(async r1 =>
@@ -115,7 +116,7 @@ namespace PaymentChallenge.Tests
             });
         }
 
-        
+
         /// <summary>
         /// As a Merchant (FancyShop)
         /// Given an order of a shopper to pay by card with insufficient fund
@@ -127,12 +128,12 @@ namespace PaymentChallenge.Tests
         {
             _idGenerator.NextPaymentId("PAY-Return_PaymentStatusFailed");
             var paymentRequest = new PaymentRequest(_card, _merchantId, _amountPaymentFailedInsufficientFund);
-            var paymentResponse = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest );
+            var paymentResponse = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest);
             paymentResponse.IfLeft(r => r.Should()
                 .BeEquivalentTo(new PaymentResponse(PaymentStatus.Fail, "PAY-Return_PaymentStatusFailed")));
 
         }
-        
+
         /// <summary>
         /// As a Merchant (FancyShop)
         /// Given an order of a shopper to pay by card with an
@@ -145,13 +146,13 @@ namespace PaymentChallenge.Tests
             _idGenerator.NextPaymentId("PAY-Return_PaymentStatus");
 
             var paymentRequest = new PaymentRequest(_card, _merchantId, _amountToCharge);
-            var paymentResponse = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest );
+            var paymentResponse = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest);
 
             paymentResponse.IfLeft(r =>
                 r.Should().BeEquivalentTo(new PaymentResponse(PaymentStatus.Success, "PAY-Return_PaymentStatus")));
 
         }
-        
+
 
         /// <summary>
         /// As a Merchant (FancyShop)
@@ -164,11 +165,15 @@ namespace PaymentChallenge.Tests
         {
             _idGenerator.NextPaymentId("PAY-Retrieve_PaymentInfo");
             var paymentRequest = new PaymentRequest(_card, _merchantId, _amountToCharge, "ORDER-123");
-
             var paymentResponse = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest);
-            paymentResponse.IfLeft( async r =>
+
+            match(paymentResponse,
+                () => throw new ApplicationException(""));
+
+
+            paymentResponse.IfLeft(async r =>
             {
-                var payment = await _paymentRepository.GetAsync(r.PaymentId);
+                var payment = await _paymentRepository.GetAsync(_merchantId, r.PaymentId);
                 payment.IfSome(p =>
                 {
                     p.Should()
@@ -182,7 +187,43 @@ namespace PaymentChallenge.Tests
 
         }
 
-        
+        /// <summary>
+        /// As a Merchant (FancyShop)
+        /// Given a payment that the merchant has requested 
+        /// When the Merchant ask to retrieve a payment which didn't exist
+        /// Then we should return none
+        /// </summary>
+        [Fact]
+        public async Task Retrieve_PaymentInfo_Which_Didnt_Exist()
+        {
+            var payment = await _paymentRepository.GetAsync(_merchantId, "unknowId");
+            payment.IsNone.Should().BeTrue();
+
+        }
+
+        /// <summary>
+        /// As a Merchant (ConcurrentShop)
+        /// Given a payment that an other Shop (FancyShop) has requested 
+        /// When ConcurrentShop ask to retrieve the payment of FancyShop
+        /// Then we should return none
+        /// </summary>
+        [Fact]
+        public async Task Retrieve_Payment_Of_another_Merchant()
+        {
+            _idGenerator.NextPaymentId("PAY-Retrieve_Payment_Of_another_Merchant");
+            var paymentRequest = new PaymentRequest(_card, _merchantId, _amountToCharge, "ORDER-Retrieve_Payment_Of_another_Merchant");
+            var paymentResponse = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest);
+
+            await match(paymentResponse,
+                result => throw new ApplicationException("Not attended"),
+                async result =>
+            {
+                var payment = await _paymentRepository.GetAsync("ConcurrentShop", result.PaymentId);
+                payment.IsNone.Should().BeTrue();
+            });
+        }
+
+
         [Fact]
         public async Task Retrieve_List_Payments()
         {
@@ -192,6 +233,8 @@ namespace PaymentChallenge.Tests
 
             paymentsRetrieved.Count.Should().Be(5);
         }
+
+
 
         private void Make5Payment()
         {
@@ -216,12 +259,13 @@ namespace PaymentChallenge.Tests
         [Fact]
         public void MaskedCardNumber()
         {
-            Card card = new Card("4242424242424242", "100", "1212" );
+            Card card = new Card("4242424242424242", "100", "1212");
             card.CardNumber.Masked.Should().Be("4242 XXXX XXXX 4242");
         }
 
 
         //  TODO scenario
+        //  Do not permit any merchant to query payment of other merchant
         //  Error payment (bad cardnumber, no fund)
         //  PaymentId not found
         //  Persist in filesystem

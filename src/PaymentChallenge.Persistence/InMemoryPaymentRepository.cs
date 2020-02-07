@@ -11,9 +11,17 @@ namespace PaymentChallenge.Persistence
     public class InMemoryPaymentRepository : PaymentRepository
     {
         private static readonly Dictionary<PaymentId, Payment> Databag = new Dictionary<PaymentId, Payment>();
-        public async Task<Option<Payment>> GetAsync(PaymentId paymentId)
+        public async Task<Option<Payment>> GetAsync(MerchantId merchantId, PaymentId paymentId)
         {
-            return await Task.FromResult(Optional(Databag[paymentId]));
+
+            if (!Databag.ContainsKey(paymentId))
+            {
+                return Option<Payment>.None;
+            }
+            Payment payment = Databag[paymentId];
+            if(payment.MerchantId != merchantId) return  Option<Payment>.None;
+
+            return await Task.FromResult(Optional(payment));
         }
 
         public async Task<Option<Payment>> GetByMerchantReferenceAsync(MerchantId merchantId, Option<MerchantReference> merchantReference)

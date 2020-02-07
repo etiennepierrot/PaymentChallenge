@@ -70,7 +70,8 @@ namespace PaymentChallenge.WebApi.Controllers
         [HttpGet]
         public async Task<IActionResult> Get(string paymentId)
         {
-            var payment = await _paymentRepository.GetAsync(paymentId);
+            //TODO get merchant Id from http HEAD.M
+            var payment = await _paymentRepository.GetAsync("", paymentId);
             return Ok(payment);
         }
     }
