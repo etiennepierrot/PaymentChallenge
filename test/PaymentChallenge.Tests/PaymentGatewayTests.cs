@@ -158,7 +158,7 @@ namespace PaymentChallenge.Tests
             await paymentResponse.IfLeftAsync(async r =>
             {
                 var payment = await _paymentRepository.GetAsync(_merchantId, r.PaymentId);
-                await payment.ShouldBeSome(async p =>
+                await payment.ShouldBeSome( p =>
                 {
                     p.Should()
                         .BeEquivalentTo(
@@ -241,8 +241,7 @@ namespace PaymentChallenge.Tests
 
 
         //  TODO scenario
-        //  Error payment (bad cardnumber, no fund)
-        //  PaymentId not found
+        //  Error payment (bad cardnumber)
         //  Persist in filesystem
         //  logging
         //  Encrypt Cardnumber ?

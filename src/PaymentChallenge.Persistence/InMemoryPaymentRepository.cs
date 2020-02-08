@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LanguageExt;
-using static LanguageExt.Prelude;
 using PaymentChallenge.Domain.Merchants;
 using PaymentChallenge.Domain.Payments;
 

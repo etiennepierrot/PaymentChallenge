@@ -2,6 +2,7 @@
 using System.Linq;
 using FluentValidation.Results;
 using PaymentChallenge.Domain.Cards;
+using PaymentChallenge.Domain.Merchants;
 using PaymentChallenge.Domain.Payments;
 using PaymentChallenge.Domain.Values;
 using PaymentChallenge.WebApi.Controllers.Dto;
@@ -10,10 +11,10 @@ namespace PaymentChallenge.WebApi.Controllers
 {
     public class DtoConverter
     {
-        public static PaymentRequest CreateCommand(PaymentRequestDto paymentRequest)
+        public static PaymentRequest CreateCommand(PaymentRequestDto paymentRequest, MerchantId merchantId)
         {
             return new PaymentRequest(DtoToModel(paymentRequest),
-                paymentRequest.MerchantId, DtoToModel(paymentRequest.AmountToCharge), 
+                merchantId, DtoToModel(paymentRequest.AmountToCharge), 
                 paymentRequest.MerchantReference);
         }
 
@@ -29,6 +30,27 @@ namespace PaymentChallenge.WebApi.Controllers
             };
         }
 
+        public static PaymentDto ModelToDto(Payment payment)
+        {
+            return new PaymentDto
+            {
+                Amount = new MoneyDto
+                {
+                    Amount = payment.Amount.Amount,
+                    Currency = payment.Amount.Currency.ToString()
+                },
+                Card = new CardDto
+                {
+                    CardNumber = payment.Card.CardNumber.Masked,
+                    Cvv = payment.Card.Cvv,
+                    ExpirationDate = payment.Card.ExpirationDate
+                },
+                Status = payment.Status.ToString(),
+                MerchantReference = payment.MerchantReference
+                    .Match(mr => (string) mr, () => ""),
+                Id = payment.PaymentId
+            };
+        }
 
         private static Money DtoToModel(MoneyDto moneyDto)
         {

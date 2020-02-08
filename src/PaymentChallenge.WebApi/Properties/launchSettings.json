@@ -20,7 +20,7 @@
     "PaymentChallenge.WebApi": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "payments",
+      "launchUrl": "",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

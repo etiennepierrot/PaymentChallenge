@@ -13,7 +13,10 @@ namespace PaymentChallenge.Domain.Payments
         private readonly PaymentRequestValidator _paymentRequestValidator;
         private readonly AcquirerBankAdapter _acquirerBankAdapter;
 
-        public PaymentGateway(PaymentRepository paymentRepository, IdGenerator idGenerator, AcquirerBankAdapter acquirerBankAdapter)
+        public PaymentGateway(
+            PaymentRepository paymentRepository, 
+            IdGenerator idGenerator, 
+            AcquirerBankAdapter acquirerBankAdapter)
         {
             _paymentRepository = paymentRepository;
             _idGenerator = idGenerator;
@@ -24,8 +27,9 @@ namespace PaymentChallenge.Domain.Payments
         public async Task<EitherAsync<PaymentResponse, ValidationResult>> ProcessPaymentRequestAsync(PaymentRequest command)
         {
             ValidationResult validationResult = _paymentRequestValidator.Validate(command);
-            if (!validationResult.IsValid) return RightAsync<PaymentResponse, ValidationResult>(validationResult);
-            return LeftAsync<PaymentResponse, ValidationResult>(await MakePayment(command));
+            return !validationResult.IsValid ? 
+                RightAsync<PaymentResponse, ValidationResult>(validationResult) :
+                LeftAsync<PaymentResponse, ValidationResult>(await MakePayment(command));
         }
 
         private async Task<PaymentResponse> MakePayment(PaymentRequest command)

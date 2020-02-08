@@ -13,6 +13,7 @@ namespace PaymentChallenge.Domain.Merchants
         }
         
         public static implicit operator MerchantId(string str) => new MerchantId(str);
+        public static implicit operator string(MerchantId merchantId) => merchantId._id;
        
         public static bool operator == (MerchantId x, MerchantId y)
         {
