@@ -1,6 +1,4 @@
-﻿using PaymentChallenge.Domain.Payments;
-
-namespace PaymentChallenge.WebApi.Controllers.Dto
+﻿namespace PaymentChallenge.WebApi.Controllers.Dto
 {
     public class PaymentResponseDto
     {

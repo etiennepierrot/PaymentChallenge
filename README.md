@@ -17,3 +17,4 @@ But i think it's still useful, because we avoid "primitive obsession" and confus
 * Implement a real Basic Auth with hashed passphrases and OAuth protocol (https://www.oauth.com/oauth2-servers/server-side-apps/)
 * Logging with PCI DSS compliance
 * add unit of work pattern
+* add pagination of list payments endpoints

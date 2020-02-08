@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using PaymentChallenge.Domain.Payments;
 using PaymentChallenge.WebApi.Controllers.Dto;
 
@@ -14,18 +14,14 @@ namespace PaymentChallenge.WebApi.Controllers
     [Route("api/[controller]")]
     public class PaymentsController : ControllerBase
     {
-        private readonly ILogger<PaymentsController> _logger;
         private readonly PaymentGateway _paymentGateway;
         private readonly PaymentRepository _paymentRepository;
         private readonly ClaimsPrincipal _claimsPrincipal;
 
-        public PaymentsController(
-            ILogger<PaymentsController> logger, 
-            PaymentGateway paymentGateway, 
+        public PaymentsController(PaymentGateway paymentGateway, 
             PaymentRepository paymentRepository,
             ClaimsPrincipal claimsPrincipal)
         {
-            _logger = logger;
             _paymentGateway = paymentGateway;
             _paymentRepository = paymentRepository;
             _claimsPrincipal = claimsPrincipal;
@@ -71,7 +67,12 @@ namespace PaymentChallenge.WebApi.Controllers
             );
         }
 
-        [HttpGet]
+        /// <summary>
+        /// Retrive a payment
+        /// </summary>
+        /// <param name="paymentId"></param>
+        /// <returns></returns>
+        [HttpGet("{paymentId}")]
         [ProducesResponseType(200, Type = typeof(PaymentDto))]
         [ProducesResponseType(404)]
         public async Task<IActionResult> Get(string paymentId)
@@ -80,6 +81,17 @@ namespace PaymentChallenge.WebApi.Controllers
             return await payment.Match<IActionResult>(
                 p => Ok(DtoConverter.ModelToDto(p)),
                 NotFound);
+        }
+        
+        /// <summary>
+        /// List all payments of the authenticated merchant
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<IActionResult> List()
+        {
+            var payments = await _paymentRepository.GetPaymentsAsync(_claimsPrincipal.Identity.Name);
+            return Ok(payments.Select(DtoConverter.ModelToDto).ToArray());
         }
     }
 }

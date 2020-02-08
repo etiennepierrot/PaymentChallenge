@@ -1,4 +1,3 @@
-using System;
 using System.Text.RegularExpressions;
 
 namespace PaymentChallenge.Domain.Cards
@@ -7,12 +6,11 @@ namespace PaymentChallenge.Domain.Cards
     {
         private readonly string _cardNumber;
 
-        public CardNumber(string cardNumber)
+        private CardNumber(string cardNumber)
         {
             _cardNumber = cardNumber;
         }
-
-
+        
         public string UnMasked => _cardNumber;
 
         public string Masked

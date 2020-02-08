@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Security.Claims;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -11,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using PaymentChallenge.AcquirerBank;
 using PaymentChallenge.Domain;
@@ -37,19 +36,14 @@ namespace PaymentChallenge.WebApi
             services.AddControllers();
             services.AddAuthentication("BasicAuthentication")
                 .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("BasicAuthentication", null);
-            services.AddTransient<ClaimsPrincipal>(s =>
-                s.GetService<IHttpContextAccessor>().HttpContext.User);
-            services.AddTransient<PaymentRepository, InMemoryPaymentRepository>();
-            services.AddTransient<MockAcquiringBankGateway>();
-            services.AddTransient<IdGenerator, PaymentIdGenerator>();
-            services.AddTransient<PaymentGateway>();
-            services.AddTransient<AcquirerBankAdapter, AcquirerBankAdapterImpl>();
-            services.AddTransient<IAuthService, StubAuthService>();
+            services.AddTransient(s => s.GetService<IHttpContextAccessor>().HttpContext.User);
+            ConfigureDomainServices(services);
 
             services
                 .AddMvcCore()
                 .AddApiExplorer()
                 .AddFluentValidation();
+            
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Payment Challenge API", Version = "v1" });
@@ -83,22 +77,29 @@ namespace PaymentChallenge.WebApi
 
         }
 
+        private static void ConfigureDomainServices(IServiceCollection services)
+        {
+            services.AddTransient<PaymentRepository, InMemoryPaymentRepository>();
+            services.AddTransient<MockAcquiringBankGateway>();
+            services.AddTransient<IdGenerator, PaymentIdGenerator>();
+            services.AddTransient<PaymentGateway>();
+            services.AddTransient<AcquirerBankAdapter, AcquirerBankAdapterImpl>();
+            services.AddTransient<IAuthService, StubAuthService>();
+        }
+
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseRequestResponseLogging();
             app.UseHttpsRedirection();
-
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
-
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {

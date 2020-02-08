@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace PaymentChallenge.Domain.Merchants
 {
     public struct MerchantId

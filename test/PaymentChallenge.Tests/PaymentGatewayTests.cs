@@ -28,7 +28,7 @@ namespace PaymentChallenge.Tests
         {
             _idGenerator = new FakeIdGenerator();
             _paymentRepository = new InMemoryPaymentRepository();
-            _paymentGateway = new PaymentGateway(_paymentRepository, _idGenerator, new AcquirerBankAdapterImpl(new MockAcquiringBankGateway()));
+            _paymentGateway = new PaymentGateway(_paymentRepository, _idGenerator, new AcquirerBankAdapterImpl(new MockAcquiringBankGateway(), new StubLogger<AcquirerBankAdapterImpl>()));
         }
 
 
@@ -228,7 +228,7 @@ namespace PaymentChallenge.Tests
             _idGenerator.NextPaymentId($"PAY-{orderId}");
             Money amount = new Money(1000, Currency.EUR);
             var paymentRequest = new PaymentRequest(_card, merchantId, amount, orderId);
-            var processAsync = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest);
+            await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest);
         }
 
 
@@ -243,7 +243,6 @@ namespace PaymentChallenge.Tests
         //  TODO scenario
         //  Error payment (bad cardnumber)
         //  Persist in filesystem
-        //  logging
         //  Encrypt Cardnumber ?
         //  and so on ...
     }
