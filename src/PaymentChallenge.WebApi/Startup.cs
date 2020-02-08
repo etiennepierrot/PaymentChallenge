@@ -48,7 +48,7 @@ namespace PaymentChallenge.WebApi
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Payment Challenge API", Version = "v1" });
 
-                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.XML";
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
                 c.AddSecurityDefinition("basic",  new OpenApiSecurityScheme

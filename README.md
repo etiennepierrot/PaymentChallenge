@@ -1,5 +1,11 @@
 # README
 
+## Run 
+
+### With docker
+docker build -t paymentchallenge:build .
+docker run --rm -it -p 8080:5000 paymentchallenge:build
+
 ## Process of design
 
 * I started to implement a scenario of shopper registration. But the document pictogram suggest that the Payment Gateway has no knowledge of the "shopper". The requirement didn't mention either the need of card registration for later use. So i go direct to payment. 
@@ -18,3 +24,5 @@ But i think it's still useful, because we avoid "primitive obsession" and confus
 * Logging with PCI DSS compliance
 * add unit of work pattern
 * add pagination of list payments endpoints
+
+

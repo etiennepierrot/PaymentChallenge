@@ -5,8 +5,6 @@ using Microsoft.Extensions.Logging;
 using PaymentChallenge.Domain.AcquiringBank;
 using PaymentChallenge.Domain.Payments;
 using Polly;
-using LanguageExt;
-using static LanguageExt.Prelude;
 
 namespace PaymentChallenge.AcquirerBank
 {
@@ -57,13 +55,12 @@ namespace PaymentChallenge.AcquirerBank
         }
 
 
-        private Unit LogOuput(ResultDto resultDto)
+        private void LogOuput(ResultDto resultDto)
         {
             _logger.Log(LogLevel.Information,
                 $"Response Acquirer Bank : " +
                 $"Status : {resultDto.Status} " +
                 $"PaymentReference : {resultDto.PaymentReference}");
-            return unit;
         }
 
         private void LogInput(PaymentRequest command, PaymentId paymentId)
