@@ -11,29 +11,26 @@ namespace PaymentChallenge.Persistence
     public class InMemoryPaymentRepository : PaymentRepository
     {
         private static readonly Dictionary<PaymentId, Payment> Databag = new Dictionary<PaymentId, Payment>();
-        public async Task<Option<Payment>> GetAsync(MerchantId merchantId, PaymentId paymentId)
+        
+        
+        public async Task<OptionAsync<Payment>> GetAsync(MerchantId merchantId, PaymentId paymentId)
         {
-
-            if (!Databag.ContainsKey(paymentId))
-            {
-                return Option<Payment>.None;
-            }
+            if (!Databag.ContainsKey(paymentId)) return OptionAsync<Payment>.None;
             Payment payment = Databag[paymentId];
-            if(payment.MerchantId != merchantId) return  Option<Payment>.None;
-
-            return await Task.FromResult(Optional(payment));
+            if(payment.MerchantId != merchantId) return OptionAsync<Payment>.None;
+            return await Task.FromResult(OptionAsync<Payment>.Some(payment));
         }
 
-        public async Task<Option<Payment>> GetByMerchantReferenceAsync(MerchantId merchantId, Option<MerchantReference> merchantReference)
+        public async Task<OptionAsync<Payment>> GetByMerchantReferenceAsync(MerchantId merchantId, Option<MerchantReference> merchantReference)
         {
-            return await merchantReference.MatchAsync(async mr =>
+            return await merchantReference.Match(async mr =>
             {
-                Payment payment = Databag.Values
-                    .SingleOrDefault(p => p.MerchantReference == mr
-                                          && p.MerchantId == merchantId);
-                return await Task.FromResult(Optional(payment));
-            }, async () => await Task.FromResult(Option<Payment>.None));
-           
+                Payment payment = Databag.Values.SingleOrDefault(p => p.MerchantReference == mr
+                                                                      && p.MerchantId == merchantId);
+                if (payment == null) return await Task.FromResult(OptionAsync<Payment>.None);
+                return await Task.FromResult(OptionAsync<Payment>.Some(payment));
+            }, 
+                async () => await Task.FromResult(OptionAsync<Payment>.None));
         }
 
         //TODO : add pagination

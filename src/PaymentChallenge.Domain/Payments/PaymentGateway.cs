@@ -21,11 +21,11 @@ namespace PaymentChallenge.Domain.Payments
             _acquirerBankAdapter = acquirerBankAdapter;
         }
 
-        public async Task<Either<PaymentResponse, ValidationResult>> ProcessPaymentRequestAsync(PaymentRequest command)
+        public async Task<EitherAsync<PaymentResponse, ValidationResult>> ProcessPaymentRequestAsync(PaymentRequest command)
         {
             ValidationResult validationResult = _paymentRequestValidator.Validate(command);
-            if (!validationResult.IsValid) return Right(validationResult);
-            return Left(await MakePayment(command));
+            if (!validationResult.IsValid) return RightAsync<PaymentResponse, ValidationResult>(validationResult);
+            return LeftAsync<PaymentResponse, ValidationResult>(await MakePayment(command));
         }
 
         private async Task<PaymentResponse> MakePayment(PaymentRequest command)

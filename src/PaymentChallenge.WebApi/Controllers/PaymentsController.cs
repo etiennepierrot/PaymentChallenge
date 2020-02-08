@@ -53,16 +53,15 @@ namespace PaymentChallenge.WebApi.Controllers
 
             var command = DtoConverter.CreateCommand(paymentRequestDto);
             var paymentResponse = await _paymentGateway.ProcessPaymentRequestAsync(command);
-
-            return paymentResponse.Match<IActionResult>(
-                vr => new JsonResult(DtoConverter.ToDto(vr))
+            var matchAsync = await paymentResponse.Match<IActionResult>(
+                result => new JsonResult(DtoConverter.ToDto(result)),
+                pr => Created(@"/api/payments", new PaymentResponseDto
                 {
-                    StatusCode = 400
-                },r => Created(@"/api/payments",new PaymentResponseDto
-                {
-                    PaymentId = r.PaymentId,
-                    PaymentStatus = r.PaymentStatus.ToString()
-                }));
+                    PaymentId = pr.PaymentId,
+                    PaymentStatus = pr.PaymentStatus.ToString()
+                })
+            );
+            return  matchAsync;
         }
 
        
