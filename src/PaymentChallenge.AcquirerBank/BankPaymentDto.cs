@@ -1,6 +1,6 @@
 namespace PaymentChallenge.AcquirerBank
 {
-    internal struct BankPaymentDto
+    public struct BankPaymentDto
     {
         public string CardNumber { get; set; }
         public string Cvv { get; set; }

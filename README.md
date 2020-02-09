@@ -2,15 +2,100 @@
 
 ## Run 
 
-### With docker
+Test : dotnet test
+Run : dotnet run --project src/PaymentChallenge.WebApi/
+
+### Authentication (not secure at all)
+
+Basic Auth with the your merchantId and any password (no check implemented yet)
+Example : 
+FancyShop:anypassword =>  Authorization: Basic RmFuY3lTaG9wOmFueXBhc3N3b3Jk
+
+### Examples
+Make a payment :
+
+curl --location --request POST 'http://localhost:5000/api/payments' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Basic RmFuY3lTaG9wOmFueXBhc3N3b3Jk' \
+--data-raw '{
+    "Card": {
+        "CardNumber": "4242424242424242",
+        "Cvv": "100",
+        "ExpirationDate": "1212"
+    },
+    "AmountToCharge": {
+        "Amount": 1000,
+        "Currency": "EUR"
+    },
+    "MerchantReference": "a_unique_reference"
+}'
+
+Note : the MerchantReference is used as an idempotency key here (maybe it's better to use a non business value, like a http header)
+
+Response :
+{
+  "paymentStatus": "Approved",
+  "paymentId": "b528c5f6-1256-4b26-911a-1766fc06dd0f"
+}
+
+Retrieve payment : 
+curl --location --request GET 'http://localhost:5000/api/payments/b528c5f6-1256-4b26-911a-1766fc06dd0f' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Basic RmFuY3lTaG9wOmFueXBhc3N3b3Jk' \
+--data-raw ''
+
+Response :
+{
+    "id": "b528c5f6-1256-4b26-911a-1766fc06dd0f",
+    "card": {
+        "cardNumber": "4242 XXXX XXXX 4242",
+        "cvv": "100",
+        "expirationDate": "1212"
+    },
+    "amount": {
+        "amount": 1000,
+        "currency": "EUR"
+    },
+    "status": "Approved",
+    "merchantReference": "a_unique_reference"
+}
+
+List all payments :
+curl --location --request GET 'http://localhost:5000/api/payments/' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Basic RmFuY3lTaG9wOmFueXBhc3N3b3Jk' \
+--data-raw ''
+Response :
+[
+    {
+        "id": "b528c5f6-1256-4b26-911a-1766fc06dd0f",
+        "card": {
+            "cardNumber": "4242 XXXX XXXX 4242",
+            "cvv": "100",
+            "expirationDate": "1212"
+        },
+        "amount": {
+            "amount": 1000,
+            "currency": "EUR"
+        },
+        "status": "Approved",
+        "merchantReference": "a_unique_reference"
+    }
+]
+
+### Run With docker
 docker build -t paymentchallenge:build .
 docker run --rm -it -p 8080:5000 paymentchallenge:build
+
+Swagger documentation : [Link](http://localhost:8080/index.html)
+
 
 ## Process of design
 
 * I started to implement a scenario of shopper registration. But the document pictogram suggest that the Payment Gateway has no knowledge of the "shopper". The requirement didn't mention either the need of card registration for later use. So i go direct to payment. 
 * I choose to use the FluentValidation package to simplify the process of validate the command who goes inside the model
 * I choose an Hexagonal Architecture for testing and for being able to replace easily the mock of the bank by a real implementation.
+* Logs are treat as stream of events in console 
 
 ## Questionable choices 
 
@@ -24,5 +109,7 @@ But i think it's still useful, because we avoid "primitive obsession" and confus
 * Logging with PCI DSS compliance
 * add unit of work pattern
 * add pagination of list payments endpoints
-
+* End to end integration tests
+* True persistence
+* Better retry policy with Circuit Breaker
 

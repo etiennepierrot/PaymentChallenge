@@ -30,28 +30,6 @@ namespace PaymentChallenge.WebApi.Controllers
             };
         }
 
-        public static PaymentDto ModelToDto(Payment payment)
-        {
-            return new PaymentDto
-            {
-                Amount = new MoneyDto
-                {
-                    Amount = payment.Amount.Amount,
-                    Currency = payment.Amount.Currency.ToString()
-                },
-                Card = new CardDto
-                {
-                    CardNumber = payment.Card.CardNumber.Masked,
-                    Cvv = payment.Card.Cvv,
-                    ExpirationDate = payment.Card.ExpirationDate
-                },
-                Status = payment.Status.ToString(),
-                MerchantReference = payment.MerchantReference
-                    .Match(mr => (string) mr, () => ""),
-                Id = payment.PaymentId
-            };
-        }
-
         private static Money DtoToModel(MoneyDto moneyDto)
         {
             return new Money(moneyDto.Amount,Enum.Parse<Currency>(moneyDto.Currency, true) );

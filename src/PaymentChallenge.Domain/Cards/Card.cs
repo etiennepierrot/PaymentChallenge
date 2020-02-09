@@ -2,7 +2,7 @@ namespace PaymentChallenge.Domain.Cards
 {
     public class Card
     {
-        public Card(string cardNumber, string cvv, string expirationDate)
+        public Card(CardNumber cardNumber, string cvv, string expirationDate)
         {
             CardNumber = cardNumber;
             Cvv = cvv;

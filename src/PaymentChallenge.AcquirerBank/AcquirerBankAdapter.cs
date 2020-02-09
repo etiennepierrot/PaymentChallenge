@@ -36,7 +36,7 @@ namespace PaymentChallenge.AcquirerBank
                 return resultDto;
             });
 
-            PaymentStatus status = dto.Status == "success" ? PaymentStatus.Success : PaymentStatus.Fail;
+            PaymentStatus status = dto.Status == "success" ? PaymentStatus.Approved : PaymentStatus.Refused;
             return new AcquirerBankResponse( status, dto.PaymentReference);
         }
 
@@ -46,7 +46,7 @@ namespace PaymentChallenge.AcquirerBank
             {
                 Amount = command.AmountToCharge.Amount,
                 Currency = command.AmountToCharge.Currency.ToString(),
-                CardNumber = command.Card.CardNumber,
+                CardNumber = command.Card.CardNumber.GetUnMaskerCardNumber(),
                 Cvv = command.Card.Cvv,
                 ExpirationDate = command.Card.ExpirationDate,
                 Reference = paymentId

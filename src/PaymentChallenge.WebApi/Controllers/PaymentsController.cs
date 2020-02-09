@@ -79,7 +79,7 @@ namespace PaymentChallenge.WebApi.Controllers
         {
             var payment = await _paymentRepository.GetAsync(_claimsPrincipal.Identity.Name, paymentId);
             return await payment.Match<IActionResult>(
-                p => Ok(DtoConverter.ModelToDto(p)),
+                p => Ok(p.ToDto()),
                 NotFound);
         }
         
@@ -91,7 +91,7 @@ namespace PaymentChallenge.WebApi.Controllers
         public async Task<IActionResult> List()
         {
             var payments = await _paymentRepository.GetPaymentsAsync(_claimsPrincipal.Identity.Name);
-            return Ok(payments.Select(DtoConverter.ModelToDto).ToArray());
+            return Ok(payments.Select(payment => payment.ToDto()).ToArray());
         }
     }
 }

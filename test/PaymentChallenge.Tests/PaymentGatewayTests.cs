@@ -47,6 +47,22 @@ namespace PaymentChallenge.Tests
             MockAcquiringBankGateway.ForwardedPayments.ContainsKey("Forward_A_Payment_To_Acquiring_Bank")
                 .Should().BeTrue();
         }
+        
+        /// <summary>
+        /// As a Merchant (FancyShop)
+        /// Given an order of a shopper to pay by card
+        /// When the Merchant request a payment processing
+        /// Then the payment should be forwarded to AcquirerBank with the real card number
+        /// </summary>
+        [Fact]
+        public async Task Forward_A_Payment_To_Acquiring_Bank_With_The_Real_Card_Number()
+        {
+            _idGenerator.NextPaymentId("Real-Card-Number");
+            await _paymentGateway.ProcessPaymentRequestAsync(new PaymentRequest(_card, _merchantId, _amountToCharge));
+
+            MockAcquiringBankGateway.ForwardedPayments["Real-Card-Number"].CardNumber
+                .Should().Be("4242424242424242");
+        }
 
         /// <summary>
         /// As a Merchant (FancyShop)
@@ -64,7 +80,8 @@ namespace PaymentChallenge.Tests
             await response.IfLeftAsync(async r =>
             {
                 var paymentPersisted =  await _paymentRepository.GetAsync(_merchantId, r.PaymentId);
-                await paymentPersisted.ShouldBeSome(p => p.BankReference.Should().Be(new AcquirerBankReference("myPaymentReference")));
+                await paymentPersisted.ShouldBeSome(p => p.BankReference
+                    .Should().Be(new AcquirerBankReference("myPaymentReference")));
             });
         }
 
@@ -79,8 +96,8 @@ namespace PaymentChallenge.Tests
         {
             _idGenerator.NextPaymentId("Idempotency_AcquiringBanking_Side");
             var payment = await _paymentGateway.ProcessPaymentRequestAsync(new PaymentRequest(_card, _merchantId, _amountToCharge));
-            await payment.ShouldBeLeft(r => r.PaymentStatus.Should().Be(PaymentStatus.Success));
-
+            await payment.ShouldBeLeft(r => r.PaymentStatus.
+                Should().Be(PaymentStatus.Approved));
         }
 
         /// <summary>
@@ -119,7 +136,7 @@ namespace PaymentChallenge.Tests
             var paymentRequest = new PaymentRequest(_card, _merchantId, _amountPaymentFailedInsufficientFund);
             var paymentResponse = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest);
             await paymentResponse.ShouldBeLeft(r => r.Should()
-                .BeEquivalentTo(new PaymentResponse(PaymentStatus.Fail, "PAY-Return_PaymentStatusFailed")));
+                .BeEquivalentTo(new PaymentResponse(PaymentStatus.Refused, "PAY-Return_PaymentStatusFailed")));
         }
 
         /// <summary>
@@ -137,7 +154,7 @@ namespace PaymentChallenge.Tests
             var paymentResponse = await _paymentGateway.ProcessPaymentRequestAsync(paymentRequest);
 
             await paymentResponse.ShouldBeLeft(r =>
-                r.Should().BeEquivalentTo(new PaymentResponse(PaymentStatus.Success, "PAY-Return_PaymentStatus")));
+                r.Should().BeEquivalentTo(new PaymentResponse(PaymentStatus.Approved, "PAY-Return_PaymentStatus")));
 
         }
 
@@ -165,7 +182,7 @@ namespace PaymentChallenge.Tests
                             Payment.CreateFromPaymentRequest(
                                 paymentRequest,
                                 "PAY-Retrieve_PaymentInfo",
-                                new AcquirerBankResponse(PaymentStatus.Success, "myPaymentReference")));
+                                new AcquirerBankResponse(PaymentStatus.Approved, "myPaymentReference")));
                 });
             });
 
@@ -236,7 +253,7 @@ namespace PaymentChallenge.Tests
         public void MaskedCardNumber()
         {
             Card card = new Card("4242424242424242", "100", "1212");
-            card.CardNumber.Masked.Should().Be("4242 XXXX XXXX 4242");
+            ((string) card.CardNumber).Should().Be("4242 XXXX XXXX 4242");
         }
 
 
@@ -245,5 +262,6 @@ namespace PaymentChallenge.Tests
         //  Persist in filesystem
         //  Encrypt Cardnumber ?
         //  and so on ...
+        
     }
 }

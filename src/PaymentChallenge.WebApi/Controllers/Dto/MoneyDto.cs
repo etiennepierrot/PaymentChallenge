@@ -1,4 +1,6 @@
-﻿namespace PaymentChallenge.WebApi.Controllers.Dto
+﻿using System;
+
+namespace PaymentChallenge.WebApi.Controllers.Dto
 {
     public class MoneyDto
     {
@@ -10,5 +12,6 @@
         /// the currency (only euros is supported (EUR) ISO 4217 (https://fr.wikipedia.org/wiki/ISO_4217)
         /// </summary>
         public string Currency { get; set; }
+        
     }
 }

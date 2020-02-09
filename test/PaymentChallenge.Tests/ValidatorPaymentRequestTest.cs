@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+using FluentAssertions;
 using FluentValidation.TestHelper;
 using PaymentChallenge.Domain.Cards;
 using PaymentChallenge.Domain.Merchants;
@@ -10,7 +13,8 @@ namespace PaymentChallenge.Tests
     public class ValidatorPaymentRequestTest
     {
 
-        private PaymentRequestValidator _validator;
+        private readonly PaymentRequestValidator _validator;
+        private readonly CardValidator _cardValidator;
         private readonly MerchantId _merchantId = "FancyShop";
         private readonly Card _invalidCard = new Card("42424242424242427", "1000", "1213" );
 
@@ -18,19 +22,22 @@ namespace PaymentChallenge.Tests
         public ValidatorPaymentRequestTest()
         {
             _validator = new PaymentRequestValidator();
+            _cardValidator = new CardValidator();
         }
 
         [Fact]
         public void ValidationCardNumber()
         {
-            Money amount = new Money(1000, Currency.EUR);
-            var paymentRequest = new PaymentRequest(_invalidCard, _merchantId, amount, "ORDER-123");
-            
-            var validationResult = _validator.TestValidate(paymentRequest);
-            
-            validationResult.ShouldHaveValidationErrorFor(pr => pr.Card.CardNumber.UnMasked);
-            validationResult.ShouldHaveValidationErrorFor(pr => pr.Card.Cvv);
-            validationResult.ShouldHaveValidationErrorFor(pr => pr.Card.ExpirationDate);
+            var validationResult = _cardValidator.Validate(_invalidCard);
+
+            validationResult.Errors.Select(e => e.PropertyName
+            ).Should().BeEquivalentTo(new List<string>
+            {
+                "cardnumber", 
+                "cvv", 
+                "expiration_date"
+            });
+
         }
 
         [Fact]
