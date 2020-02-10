@@ -1,5 +1,7 @@
 # README
 
+## CI
+
 ![.NET Core](https://github.com/etiennepierrot/PaymentChallenge/workflows/.NET%20Core/badge.svg?branch=master)
 
 ## Requirements
@@ -145,4 +147,5 @@ But i think it's still useful, because we avoid "primitive obsession" and confus
 * Better retry policy with Circuit Breaker
 * Add more constraints (size, regex,) on API input validations and improve error messages
 * Improve mapping and validation Dto => Model  (maybe with automapper)
-* so many things ...
+* Continuous Deployment 
+* And so many things ...
