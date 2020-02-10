@@ -2,7 +2,7 @@
 
 ## CI
 
-![.NET Core](https://github.com/etiennepierrot/PaymentChallenge/workflows/.NET%20Core/badge.svg?branch=master)
+[![.NET Core](https://github.com/etiennepierrot/PaymentChallenge/workflows/.NET%20Core/badge.svg?branch=master)](https://github.com/etiennepierrot/PaymentChallenge/actions?query=workflow%3A%22.NET+Core%22)
 
 ## Requirements
 
