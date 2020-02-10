@@ -13,7 +13,6 @@ namespace PaymentChallenge.AcquirerBank
             Results = new Dictionary<string, ResultDto>();
             ForwardedPayments = new Dictionary<string, BankPaymentDto>();
         }
-        public static Dictionary<string, ResultDto> F { get; private set; }
 
         public static Dictionary<string, BankPaymentDto> ForwardedPayments { get; private set; }
         public static Dictionary<string, ResultDto> Results { get; private set; }
@@ -21,6 +20,7 @@ namespace PaymentChallenge.AcquirerBank
 
         internal async Task<ResultDto> AuthorizePaymentAsync(BankPaymentDto bankPaymentDto)
         {
+            //here i supposed that the PSP support Idempotency 
             if (IdempotencyCheck(bankPaymentDto))
             {
                 return await Task.FromResult(Results[bankPaymentDto.Reference]);

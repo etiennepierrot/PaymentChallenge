@@ -7,6 +7,7 @@ using PaymentChallenge.Domain.Payments;
 
 namespace PaymentChallenge.Persistence
 {
+    //TODO : add DB implementation
     public class InMemoryPaymentRepository : PaymentRepository
     {
         private static readonly Dictionary<PaymentId, Payment> Databag = new Dictionary<PaymentId, Payment>();

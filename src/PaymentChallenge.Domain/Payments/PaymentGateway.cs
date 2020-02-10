@@ -35,14 +35,15 @@ namespace PaymentChallenge.Domain.Payments
         private async Task<PaymentResponse> MakePayment(PaymentRequest command)
         {
             var payment = await _paymentRepository.GetByMerchantReferenceAsync(command.MerchantId, command.MerchantReference);
-            return await payment.MatchAsync(p => new PaymentResponse(p.Status, p.PaymentId),
-                async () =>
-                {
-                    var paymentId = _idGenerator.GeneratePaymentId();
-                    var bankResponse = await _acquirerBankAdapter.BankResponse(command, paymentId);
-                    await CreatePayment(command, paymentId, bankResponse);
-                    return new PaymentResponse(bankResponse.Status, paymentId);
-                });
+            return await payment.MatchAsync
+            (p => new PaymentResponse(p.Status, p.PaymentId),
+            async () =>
+            {
+                var paymentId = _idGenerator.GeneratePaymentId();
+                var bankResponse = await _acquirerBankAdapter.BankResponse(command, paymentId);
+                await CreatePayment(command, paymentId, bankResponse);
+                return new PaymentResponse(bankResponse.Status, paymentId);
+            });
         }
 
         private async Task CreatePayment(PaymentRequest command, PaymentId paymentId, AcquirerBankResponse bankResponse)

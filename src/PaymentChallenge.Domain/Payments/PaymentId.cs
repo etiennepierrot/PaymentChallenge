@@ -1,7 +1,6 @@
 namespace PaymentChallenge.Domain.Payments
 {
     
-    
     public struct PaymentId
     {
         private readonly string _id;

@@ -34,8 +34,7 @@ namespace PaymentChallenge.Domain.Cards
             string value = _cardNumber
                 .Replace("-", "")
                 .Replace(" ", "");
-
-            
+          
             int checksum = 0;
             bool evenDigit = false;
             foreach (char digit in value.ToCharArray().Reverse()) {
