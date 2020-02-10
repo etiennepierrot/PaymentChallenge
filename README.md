@@ -1,5 +1,7 @@
 # README
 
+![.NET Core](https://github.com/etiennepierrot/PaymentChallenge/workflows/.NET%20Core/badge.svg?branch=master)
+
 ## Requirements
 
 dotnet core 3.0 installed
